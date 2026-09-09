@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zuellig Pharma · IMOJEV — Facebook Performance Dashboard</title>
+<style>
+  :root{
+    --brand:#CADB36; --brand-deep:#B3C42B; --brand-light:#E2E88F; --brand-tint:#F3F7D6;  /* IMOJEV green DS302-3U rgb(202,219,54) */
+    --brand-blue:#6C8CC7; --brand-blue-deep:#4E6BAE;   /* IMOJEV blue DS196-5U rgb(108,140,199) */
+    --zp-red:#6C8CC7; --zp-red-dark:#4E6BAE;   /* data accent = IMOJEV blue */
+    --zp-ink:#2E343A; --zp-charcoal:#4A525B;
+    --bg:#F5F7FB; --card:#FFFFFF; --line:#E6E9F0; --muted:#6E7683; --muted2:#9AA2B0;
+    --ok:#5E9E2E; --warn:#E8912B; --bad:#D23B3B; --track:#EDEFF4;
+    --shadow:0 1px 2px rgba(46,52,58,.06),0 6px 20px rgba(46,52,58,.07);
+    --radius:16px;
+    --sans:Verdana,Geneva,'DejaVu Sans',Tahoma,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--zp-ink);font-family:var(--sans);
+       font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  a{color:var(--zp-red)}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 20px 64px}
+
+  /* Header */
+  header.top{background:linear-gradient(105deg,var(--brand) 0%,#A9C77E 34%,#8AA9D0 70%,var(--brand-blue) 100%);color:var(--zp-ink);border-bottom:3px solid var(--brand-blue-deep)}
+  .top-in{max-width:1240px;margin:0 auto;padding:20px 20px 22px;display:flex;
+          align-items:center;gap:18px;flex-wrap:wrap}
+  .mark{width:46px;height:46px;flex:0 0 auto;border-radius:11px;background:#fff;
+         display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .mark svg{display:block}
+  .brand h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.3px}
+  .brand .sub{opacity:.92;font-size:12.5px;margin-top:2px}
+  .top-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .live{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.62);
+        padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%;background:#1a7f37;box-shadow:0 0 0 0 rgba(26,127,55,.6);
+       animation:pulse 1.8s infinite}
+  .dot.snap{background:#C77800;animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(26,127,55,.55)}70%{box-shadow:0 0 0 7px rgba(26,127,55,0)}100%{box-shadow:0 0 0 0 rgba(26,127,55,0)}}
+  select,button.btn{font-family:var(--sans);font-size:12.5px;border-radius:9px;border:0;padding:8px 12px;cursor:pointer}
+  select{background:#fff;color:var(--zp-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  button.btn{background:var(--brand-blue-deep);color:#fff;font-weight:700}
+  button.btn:hover{background:#3E579A}
+
+  /* Section shells */
+  .section{margin-top:26px}
+  .section-h{display:flex;align-items:baseline;gap:12px;margin:0 2px 12px}
+  .section-h .n{width:26px;height:26px;flex:0 0 auto;border-radius:8px;background:var(--brand-blue-deep);
+       color:#fff;font-size:13px;font-weight:800;display:grid;place-items:center}
+  .section-h h2{margin:0;font-size:16px;font-weight:800}
+  .section-h .hint{color:var(--muted);font-size:12px;margin-left:auto;font-weight:500}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .pad{padding:18px 20px}
+
+  /* KPI cards */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .kpi{padding:16px 16px 14px}
+  .kpi .lab{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .kpi .ic{width:9px;height:9px;border-radius:3px;background:var(--zp-red)}
+  .kpi .val{font-size:26px;font-weight:800;margin:8px 0 2px;letter-spacing:-.5px}
+  .kpi .unit{font-size:12px;color:var(--muted2);font-weight:600}
+  .kpi .vs{font-size:12px;color:var(--muted);margin-top:3px}
+  .kpi .vs b{color:var(--zp-charcoal)}
+  .bar{height:7px;border-radius:6px;background:var(--track);overflow:hidden;margin-top:11px}
+  .bar > i{display:block;height:100%;border-radius:6px;background:var(--zp-red)}
+  .kpi .pct{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
+  .kpi .pct b{color:var(--zp-red)}
+
+  /* flight strip */
+  .flight{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .flight .big{font-size:15px;font-weight:800}
+  .flight .track{flex:1;min-width:220px}
+  .flight .bar{margin-top:0}
+  .flight .bar > i{background:linear-gradient(90deg,var(--zp-charcoal),var(--zp-ink))}
+  .chip{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--track);color:var(--zp-charcoal)}
+  .chip.ok{background:rgba(31,157,87,.12);color:var(--ok)} .chip.warn{background:rgba(232,145,43,.14);color:var(--warn)}
+
+  /* charts */
+  .chart-wrap{overflow-x:auto}
+  svg.chart{display:block;width:100%;min-width:560px;height:260px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  /* tables */
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  .table-wrap{overflow-x:auto}
+  th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:#faf9f9;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:800;position:sticky;top:0}
+  tbody tr.obj-row td{background:#EDF1FA;font-weight:800;color:var(--brand-blue-deep)}
+  tbody tr.grand td{background:var(--brand-blue-deep);color:#fff;font-weight:800;border-bottom:0}
+  tbody tr.grand td:first-child{border-radius:0 0 0 12px}
+  tbody tr.grand td:last-child{border-radius:0 0 12px 0}
+  td .mini{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end}
+  td .minibar{width:64px;height:6px;border-radius:4px;background:var(--track);overflow:hidden}
+  td .minibar > i{display:block;height:100%;background:var(--zp-red)}
+  .sub-td{color:var(--muted)}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700}
+  .pill.reach{background:rgba(202,219,54,.30);color:#6E7D14}
+  .pill.traffic{background:rgba(108,140,199,.20);color:var(--brand-blue-deep)}
+
+  .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+  .defs{columns:2;column-gap:28px;font-size:12.5px;color:var(--muted)}
+  .defs p{margin:0 0 9px;break-inside:avoid}
+  .defs b{color:var(--zp-charcoal)}
+  footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center;line-height:1.7}
+  .banner{margin-top:14px;background:#fff7e6;border:1px solid #ffe2ac;color:#8a5a00;
+           border-radius:12px;padding:10px 14px;font-size:12.5px;display:none}
+  @media(max-width:960px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.defs{columns:1}}
+  @media(max-width:520px){.kpis{grid-template-columns:1fr}}
+
+  /* Đọc nhanh — định nghĩa dễ hiểu */
+  .defs-top{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .def{display:flex;gap:11px;align-items:flex-start}
+  .def .de{width:36px;height:36px;flex:0 0 auto;border-radius:10px;background:var(--brand-tint);
+           display:grid;place-items:center;font-size:18px;border:1px solid var(--brand-light)}
+  .def h4{margin:0 0 3px;font-size:13.5px;font-weight:800}
+  .def h4 small{color:var(--muted2);font-weight:600;font-size:11px}
+  .def p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+  @media(max-width:820px){.defs-top{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.defs-top{grid-template-columns:1fr}}
+
+  /* Tổng quan tích cực + Nhận xét/Next action */
+  .summary{padding:18px 20px;border-left:7px solid var(--brand-deep)}
+  .sum-badge{display:inline-flex;align-items:center;gap:7px;background:var(--brand);color:#243b06;
+             font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:11px}
+  .sum-note{font-size:14.5px;line-height:1.62}
+  .cmt{margin-top:12px;background:var(--card);border:1px solid var(--line);
+       border-left:5px solid var(--brand-deep);border-radius:12px;padding:12px 16px}
+  .cmt-row{display:flex;gap:11px;align-items:flex-start;margin:6px 0}
+  .cmt-ic{font-size:16px;line-height:1.4;flex:0 0 auto}
+  .cmt-row .h{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:800}
+  .cmt-row p{margin:2px 0 0;font-size:13.5px;line-height:1.55}
+
+  /* date range picker */
+  .daterange{display:inline-flex;align-items:center;gap:5px}
+  .daterange input[type=date]{font-family:var(--sans);font-size:12px;border:0;border-radius:8px;padding:7px 9px;
+     background:#fff;color:var(--zp-ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .daterange > span{color:inherit;opacity:.6;font-weight:800}
+
+  /* funnel + donut */
+  .mini-h{font-size:14px;font-weight:800;margin-bottom:14px}
+  .pool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:820px){.pool-grid{grid-template-columns:1fr}}
+  .fn-row{margin:0 0 13px}
+  .fn-lab{font-size:12.5px;font-weight:700;color:var(--zp-charcoal);margin-bottom:4px}
+  .fn-barwrap{display:flex;align-items:center;gap:10px}
+  .fn-bar{height:24px;border-radius:6px;min-width:6px}
+  .fn-val{font-size:15px;font-weight:800}
+  .fn-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .donut-flex{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .donut-legend{flex:1;min-width:150px}
+  .lg-row{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}
+  .lg-sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .lg-row b{margin-left:auto;color:var(--zp-ink)}
+
+  /* horizontal bars (region / age breakdown từ Meta report) */
+  .hbar-row{display:flex;align-items:center;gap:10px;margin:10px 0}
+  .hbar-lab{width:118px;flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--zp-charcoal);
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbar-track{flex:1;height:22px;border-radius:6px;background:var(--track);overflow:hidden;min-width:60px}
+  .hbar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#4E6BAE,#9BB0D8)}
+  .hbar-fill.g{background:linear-gradient(90deg,#B3C42B,#E2E88F)}
+  .hbar-val{width:118px;flex:0 0 auto;text-align:right;font-size:12.5px;font-weight:800}
+  .hbar-val small{color:var(--muted);font-weight:600;font-size:11px}
+  .rep-note{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.55}
+  .rep-win{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .rep-win .tag{background:var(--brand-tint);border:1px solid var(--brand-light);color:#5b6a12;
+                font-weight:800;font-size:12px;padding:6px 13px;border-radius:999px}
+  .freq-big{font-size:44px;font-weight:800;letter-spacing:-1px;color:var(--brand-blue-deep);line-height:1.05}
+  .freq-unit{font-size:15px;font-weight:700;color:var(--muted)}
+  svg.freqchart{display:block;width:100%;min-width:440px;height:210px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="mark" title="Zuellig Pharma">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <defs><linearGradient id="zg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#6C8CC7"/><stop offset="1" stop-color="#4E6BAE"/></linearGradient></defs>
+        <path d="M7 8 h16 l-16 14 h16" fill="none" stroke="url(#zg)" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1 id="hTitle">IMOJEV — Facebook Performance Dashboard</h1>
+      <div class="sub"><span id="hSub">Zuellig Pharma · Chiến dịch IMOJEV · Flight</span> <span id="flightRange"></span></div>
+    </div>
+    <div class="top-right">
+      <span class="live"><span id="liveDot" class="dot snap"></span><span id="liveText">Snapshot</span></span>
+      <select id="rangeSel" title="Range">
+        <option value="all"></option>
+        <option value="l7d"></option>
+        <option value="l14d"></option>
+        <option value="mtd"></option>
+        <option value="today"></option>
+      </select>
+      <span class="daterange"><input type="date" id="fromDate"><span>→</span><input type="date" id="toDate"></span>
+      <button class="btn" id="langBtn" title="Switch language / Đổi ngôn ngữ">EN</button>
+      <button class="btn" id="refreshBtn" title="Reload">↻ <span id="refreshTxt">Cập nhật</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="banner" id="banner"></div>
+
+  <!-- Đọc nhanh: định nghĩa chỉ số (siêu dễ hiểu) — LÊN ĐẦU -->
+  <div class="section" style="margin-top:22px">
+    <div class="section-h"><div class="n">i</div><h2 id="defsH">Đọc nhanh 30 giây — các con số nghĩa là gì?</h2>
+      <span class="hint" id="defsHint">Giải thích đơn giản nhất</span></div>
+    <div class="card pad"><div class="defs-top" id="defsTop"></div></div>
+  </div>
+
+  <!-- Độ phủ tệp: Unique Reach vs Pool size -->
+  <div class="section">
+    <div class="section-h"><div class="n">◑</div><h2 id="poolH">Độ phủ tệp mục tiêu — Reach / Pool size</h2>
+      <span class="hint" id="poolHint">Pool size cố định · Unique reach điền tay · %Reach tự tính</span></div>
+    <div class="pool-grid" id="poolWrap"></div>
+  </div>
+
+  <!-- Tổng quan: chiến dịch đang tốt -->
+  <div class="section">
+    <div class="summary card" id="summaryBox"></div>
+  </div>
+
+  <!-- KPI hero -->
+  <div class="section">
+    <div class="kpis" id="kpiCards"></div>
+  </div>
+
+  <!-- Flight pacing -->
+  <div class="section">
+    <div class="card pad flight" id="flightStrip"></div>
+  </div>
+
+  <!-- Tiến độ delivery: Kế hoạch (theo nhịp) vs Thực tế -->
+  <div class="section">
+    <div class="section-h"><div class="n">◷</div><h2 id="delivH">Tiến độ delivery — Kế hoạch vs Thực tế</h2>
+      <span class="hint" id="delivHint"></span></div>
+    <div class="card"><div class="table-wrap"><table id="tblDeliv"></table></div></div>
+  </div>
+
+  <!-- Trend -->
+  <div class="section">
+    <div class="section-h"><div class="n">◔</div><h2 id="trendH">Diễn tiến theo ngày</h2>
+      <span class="hint" id="trendHint"></span></div>
+    <div class="card pad">
+      <div class="chart-wrap"><svg class="chart" id="trendChart"></svg></div>
+      <div class="legend">
+        <span><i style="background:#9BB0D8"></i> <span id="legDaily">Impression / ngày</span></span>
+        <span><i style="background:#4E6BAE"></i> <span id="legCum">Impression luỹ kế</span></span>
+        <span><i style="background:#9AA3BA"></i> <span id="legIdeal">Nhịp chuẩn (mục tiêu theo thời gian)</span></span>
+      </div>
+    </div>
+    <div id="cmtTrend"></div>
+  </div>
+
+  <!-- Hành trình + Tỷ trọng nội dung -->
+  <div class="section">
+    <div class="grid2">
+      <div class="card pad">
+        <div class="mini-h" id="funnelH">Hành trình người dùng — từ nhìn thấy đến bấm tìm hiểu</div>
+        <div id="funnel"></div>
+      </div>
+      <div class="card pad">
+        <div class="mini-h" id="donutH">Tỷ trọng tiếp cận theo nội dung</div>
+        <div id="donutWrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- I. Overview -->
+  <div class="section">
+    <div class="section-h"><div class="n">I</div><h2 id="ovH">Tổng quan — Objective × Asset</h2>
+      <span class="hint" id="ovHint">Mục tiêu = cho cả chiến dịch · Kết quả thực tế = số đã đạt tới thời điểm đang xem</span></div>
+    <div class="card"><div class="table-wrap"><table id="tblOverview"></table></div></div>
+    <div id="cmtOverview"></div>
+  </div>
+
+  <!-- II. Audience x Creative -->
+  <div class="section">
+    <div class="section-h"><div class="n">II</div><h2 id="audH">Audience × Creative</h2>
+      <span class="hint" id="audHint">Phân rã theo nhóm mẹ</span></div>
+    <div class="card"><div class="table-wrap"><table id="tblAudience"></table></div></div>
+    <div id="cmtAudience"></div>
+  </div>
+
+  <!-- III. Deepdive -->
+  <div class="section">
+    <div class="section-h"><div class="n">III</div><h2 id="deepH">Deepdive — Pillar × Asset</h2>
+      <span class="hint" id="deepHint">%VR = View/Impression · %CTR = Click/Impression</span></div>
+    <div class="card"><div class="table-wrap"><table id="tblDeep"></table></div></div>
+    <div id="cmtDeep"></div>
+  </div>
+
+  <!-- IV. Chân dung tiếp cận — Meta Ads breakdown (Region / Placement / Age / Frequency) -->
+  <div class="section" id="secReport">
+    <div class="section-h"><div class="n">IV</div><h2 id="repH">Chân dung tiếp cận — từ báo cáo Meta Ads</h2>
+      <span class="hint" id="repHint"></span></div>
+    <div class="card pad rep-win" id="repWindow" style="margin-bottom:14px"></div>
+    <div class="grid2">
+      <div class="card pad">
+        <div class="mini-h" id="repGeoH">Top tỉnh / thành phố tiếp cận</div>
+        <div id="repGeo"></div>
+        <div class="rep-note" id="repGeoNote"></div>
+      </div>
+      <div class="card pad">
+        <div class="mini-h" id="repPlaceH">Vị trí hiển thị (Placement)</div>
+        <div id="repPlace"></div>
+        <div class="rep-note" id="repPlaceNote"></div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="card pad">
+        <div class="mini-h" id="repFreqH">Tần suất — mỗi người thấy mấy lần</div>
+        <div id="repFreq"></div>
+      </div>
+    </div>
+    <div id="cmtReport"></div>
+    <div id="repPostsWrap" style="margin-top:16px">
+      <div class="card pad">
+        <div class="mini-h" id="repPostsH">Bài đăng đã chạy</div>
+        <div class="table-wrap"><table id="tblPosts"></table></div>
+        <div class="rep-note" id="repPostsNote"></div>
+      </div>
+    </div>
+    <div class="grid2" id="repAgeGenderWrap" style="margin-top:16px">
+      <div class="card pad">
+        <div class="mini-h" id="repByAge">Theo độ tuổi</div>
+        <div class="table-wrap"><table id="tblAge"></table></div>
+      </div>
+      <div class="card pad">
+        <div class="mini-h" id="repByGender">Theo giới tính</div>
+        <div class="table-wrap"><table id="tblGender"></table></div>
+      </div>
+    </div>
+    <div class="rep-note" id="agLegend" style="margin-top:8px"></div>
+  </div>
+
+  <footer>
+    <div id="tagline" style="font-weight:800;color:var(--brand-blue-deep);font-size:13.5px;margin-bottom:4px">IMOJEV — Tiêm liều nhắc, chắc tương lai</div>
+    <div id="footNote"></div>
+  </footer>
+</div>
+
+<script>
+/* ============================ CONFIG ============================ */
+/* Để bật LIVE: dán link CSV "Publish to web" của tab FB_Paxy vào đây.
+   File → Share → Publish to web → chọn tab FB_Paxy → Comma-separated values (.csv).
+   Ví dụ: https://docs.google.com/spreadsheets/d/e/2PACX-xxxx/pub?gid=425474049&single=true&output=csv */
+const DATA_URL = "";   // "" = dùng snapshot nhúng sẵn (set trong dashboard_config.json)
+const AUTO_REFRESH_MIN = 10;   // phút; 0 = tắt auto refresh
+
+/* ĐỘ PHỦ TỆP — pool + reach ĐỌC TỰ ĐỘNG từ tab "Reach" trong Google Sheet.
+   Anh chỉ cần điền cột "Unique Reach" trong tab Reach → robot tự cập nhật %Reach. */
+const POOL_REACH = [{"name": "Phụ huynh có con 5–15 tuổi", "poolMin": 14150000.0, "poolMax": 14150000.0, "pool": 14150000.0, "reach": 1753096.0}, {"name": "Phụ huynh có con 0–2 tuổi", "poolMin": 13850000.0, "poolMax": 13850000.0, "pool": 13850000.0, "reach": 1090318.0}];
+/* =============================================================== */
+
+const SNAP = [{"date": "2026-06-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-15", "impr": 98.0, "eng": 18.0, "view": 3.0, "click": 0.0}, {"date": "2026-06-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-15", "impr": 6707.0, "eng": 416.0, "view": 35.0, "click": 1.0}, {"date": "2026-06-21", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 6627.0, "eng": 453.0, "view": 56.0, "click": 2.0}, {"date": "2026-06-21", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 10755.0, "eng": 612.0, "view": 60.0, "click": 0.0}, {"date": "2026-06-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 3411.0, "eng": 313.0, "view": 22.0, "click": 0.0}, {"date": "2026-06-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5590.0, "eng": 609.0, "view": 39.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 6681.0, "eng": 692.0, "view": 64.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 340.0, "eng": 23.0, "view": 4.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 21946.0, "eng": 29.0, "view": 1.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 39787.0, "eng": 37.0, "view": 1.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 31082.0, "eng": 23.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 42765.0, "eng": 31.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 7503.0, "eng": 707.0, "view": 53.0, "click": 0.0}, {"date": "2026-06-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 11732.0, "eng": 1176.0, "view": 76.0, "click": 1.0}, {"date": "2026-06-23", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 7042.0, "eng": 649.0, "view": 55.0, "click": 0.0}, {"date": "2026-06-23", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 31608.0, "eng": 24.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-23", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 50810.0, "eng": 46.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-23", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 169675.0, "eng": 97.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-23", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 5992.0, "eng": 404.0, "view": 18.0, "click": 0.0}, {"date": "2026-06-23", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 9391.0, "eng": 574.0, "view": 45.0, "click": 2.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 6275.0, "eng": 475.0, "view": 50.0, "click": 1.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 7920.0, "eng": 553.0, "view": 61.0, "click": 1.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 31745.0, "eng": 37.0, "view": 1.0, "click": 0.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 49520.0, "eng": 68.0, "view": 6.0, "click": 0.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 56489.0, "eng": 34.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 106450.0, "eng": 59.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 51591.0, "eng": 4515.0, "view": 342.0, "click": 6.0}, {"date": "2026-06-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 75257.0, "eng": 6302.0, "view": 452.0, "click": 15.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 6670.0, "eng": 583.0, "view": 50.0, "click": 1.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 10354.0, "eng": 805.0, "view": 92.0, "click": 2.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 32307.0, "eng": 20.0, "view": 1.0, "click": 0.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 49619.0, "eng": 40.0, "view": 3.0, "click": 0.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 30174.0, "eng": 26.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 56727.0, "eng": 64.0, "view": 0.0, "click": 5.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 74557.0, "eng": 32.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 115544.0, "eng": 58.0, "view": 0.0, "click": 2.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 128951.0, "eng": 11407.0, "view": 852.0, "click": 20.0}, {"date": "2026-06-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 200131.0, "eng": 24474.0, "view": 1787.0, "click": 12.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 6236.0, "eng": 419.0, "view": 50.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 9954.0, "eng": 474.0, "view": 47.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 30217.0, "eng": 25.0, "view": 2.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 46807.0, "eng": 32.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 8912.0, "eng": 1011.0, "view": 91.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 15889.0, "eng": 2019.0, "view": 218.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 47731.0, "eng": 29.0, "view": 0.0, "click": 3.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 51424.0, "eng": 30.0, "view": 0.0, "click": 9.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 76191.0, "eng": 33.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4470.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 72269.0, "eng": 61.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 122336.0, "eng": 11239.0, "view": 792.0, "click": 11.0}, {"date": "2026-06-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 192531.0, "eng": 22067.0, "view": 1477.0, "click": 19.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 3903.0, "eng": 337.0, "view": 26.0, "click": 1.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4073.0, "eng": 293.0, "view": 33.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 3787.0, "eng": 206.0, "view": 15.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3799.0, "eng": 224.0, "view": 21.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 4321.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 4437.0, "eng": 2.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 4791.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4790.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 4119.0, "eng": 236.0, "view": 24.0, "click": 0.0}, {"date": "2026-06-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4099.0, "eng": 338.0, "view": 21.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 4482.0, "eng": 214.0, "view": 26.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4606.0, "eng": 230.0, "view": 24.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 4325.0, "eng": 244.0, "view": 14.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4345.0, "eng": 209.0, "view": 15.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 27019.0, "eng": 19.0, "view": 0.0, "click": 3.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 42430.0, "eng": 24.0, "view": 0.0, "click": 5.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 5468.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5213.0, "eng": 6.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 4509.0, "eng": 343.0, "view": 19.0, "click": 2.0}, {"date": "2026-06-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4628.0, "eng": 423.0, "view": 26.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 4356.0, "eng": 228.0, "view": 17.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4572.0, "eng": 283.0, "view": 37.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 4391.0, "eng": 474.0, "view": 37.0, "click": 1.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4335.0, "eng": 289.0, "view": 25.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 13809.0, "eng": 13.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 21238.0, "eng": 5.0, "view": 0.0, "click": 2.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1682.0, "eng": 119.0, "view": 8.0, "click": 1.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 1691.0, "eng": 122.0, "view": 6.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 5285.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5275.0, "eng": 6.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 4773.0, "eng": 415.0, "view": 21.0, "click": 1.0}, {"date": "2026-06-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4675.0, "eng": 561.0, "view": 29.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 1119.0, "eng": 70.0, "view": 8.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 1047.0, "eng": 70.0, "view": 9.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 4319.0, "eng": 399.0, "view": 45.0, "click": 1.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4471.0, "eng": 314.0, "view": 31.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 4186.0, "eng": 390.0, "view": 23.0, "click": 1.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4153.0, "eng": 185.0, "view": 10.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 4527.0, "eng": 3.0, "view": 0.0, "click": 1.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 4433.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 3262.0, "eng": 206.0, "view": 20.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3207.0, "eng": 238.0, "view": 20.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 5163.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5376.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 4414.0, "eng": 392.0, "view": 29.0, "click": 0.0}, {"date": "2026-06-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4465.0, "eng": 473.0, "view": 29.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 4848.0, "eng": 242.0, "view": 29.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4814.0, "eng": 251.0, "view": 28.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 5216.0, "eng": 350.0, "view": 39.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5456.0, "eng": 262.0, "view": 22.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 5079.0, "eng": 395.0, "view": 29.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5172.0, "eng": 339.0, "view": 37.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 6692.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 6795.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 5561.0, "eng": 169.0, "view": 15.0, "click": 2.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5503.0, "eng": 228.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 6494.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6255.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 5525.0, "eng": 342.0, "view": 16.0, "click": 0.0}, {"date": "2026-07-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5376.0, "eng": 416.0, "view": 29.0, "click": 1.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2976.0, "eng": 167.0, "view": 16.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4937.0, "eng": 289.0, "view": 34.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2758.0, "eng": 294.0, "view": 22.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5414.0, "eng": 376.0, "view": 36.0, "click": 1.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2660.0, "eng": 261.0, "view": 20.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4727.0, "eng": 438.0, "view": 34.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 0-2", "impr": 2656.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Event", "aud": "Parents with kids from 5-15", "impr": 2649.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2804.0, "eng": 108.0, "view": 9.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5060.0, "eng": 216.0, "view": 18.0, "click": 1.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3414.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6317.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2595.0, "eng": 167.0, "view": 10.0, "click": 0.0}, {"date": "2026-07-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5783.0, "eng": 463.0, "view": 34.0, "click": 1.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4937.0, "eng": 375.0, "view": 35.0, "click": 0.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5599.0, "eng": 490.0, "view": 51.0, "click": 2.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4329.0, "eng": 327.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4843.0, "eng": 340.0, "view": 24.0, "click": 1.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 6.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6295.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6411.0, "eng": 595.0, "view": 37.0, "click": 1.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 865.0, "eng": 109.0, "view": 14.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5179.0, "eng": 671.0, "view": 52.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 286.0, "eng": 57.0, "view": 7.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5629.0, "eng": 482.0, "view": 53.0, "click": 1.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1100.0, "eng": 136.0, "view": 12.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4565.0, "eng": 477.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 709.0, "eng": 108.0, "view": 9.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4945.0, "eng": 289.0, "view": 27.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 412.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6612.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 277.0, "eng": 37.0, "view": 6.0, "click": 0.0}, {"date": "2026-07-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6694.0, "eng": 675.0, "view": 38.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5209.0, "eng": 667.0, "view": 54.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 1564.0, "eng": 145.0, "view": 13.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5143.0, "eng": 534.0, "view": 50.0, "click": 2.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4957.0, "eng": 180.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 6.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 7664.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 4.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 7405.0, "eng": 742.0, "view": 48.0, "click": 1.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 1653.0, "eng": 262.0, "view": 31.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4927.0, "eng": 674.0, "view": 59.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 3183.0, "eng": 426.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4892.0, "eng": 528.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 3162.0, "eng": 329.0, "view": 26.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4983.0, "eng": 339.0, "view": 21.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3583.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6666.0, "eng": 6.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2653.0, "eng": 317.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 7106.0, "eng": 797.0, "view": 56.0, "click": 1.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2678.0, "eng": 234.0, "view": 19.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4467.0, "eng": 341.0, "view": 36.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2439.0, "eng": 229.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4508.0, "eng": 481.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2446.0, "eng": 92.0, "view": 11.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4321.0, "eng": 204.0, "view": 22.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3678.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6047.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2780.0, "eng": 134.0, "view": 9.0, "click": 0.0}, {"date": "2026-07-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6406.0, "eng": 546.0, "view": 35.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2683.0, "eng": 249.0, "view": 33.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4731.0, "eng": 497.0, "view": 40.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2578.0, "eng": 233.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4695.0, "eng": 565.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2575.0, "eng": 218.0, "view": 16.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4514.0, "eng": 279.0, "view": 32.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3277.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6568.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 3037.0, "eng": 353.0, "view": 38.0, "click": 0.0}, {"date": "2026-07-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6805.0, "eng": 894.0, "view": 66.0, "click": 0.0}, {"date": "2026-07-09", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4650.0, "eng": 592.0, "view": 56.0, "click": 0.0}, {"date": "2026-07-09", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4704.0, "eng": 567.0, "view": 50.0, "click": 0.0}, {"date": "2026-07-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4360.0, "eng": 362.0, "view": 36.0, "click": 0.0}, {"date": "2026-07-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6737.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6789.0, "eng": 848.0, "view": 79.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 4275.0, "eng": 649.0, "view": 59.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3154.0, "eng": 235.0, "view": 26.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2459.0, "eng": 336.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3432.0, "eng": 369.0, "view": 30.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2773.0, "eng": 376.0, "view": 29.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 2937.0, "eng": 246.0, "view": 13.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 6405.0, "eng": 9.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4182.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 6131.0, "eng": 1008.0, "view": 99.0, "click": 0.0}, {"date": "2026-07-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4634.0, "eng": 599.0, "view": 60.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4115.0, "eng": 486.0, "view": 44.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 33.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 6462.0, "eng": 642.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3328.0, "eng": 327.0, "view": 28.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 2381.0, "eng": 227.0, "view": 16.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3034.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3630.0, "eng": 476.0, "view": 35.0, "click": 1.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2330.0, "eng": 200.0, "view": 12.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 5449.0, "eng": 562.0, "view": 51.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2477.0, "eng": 202.0, "view": 21.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5348.0, "eng": 539.0, "view": 48.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2359.0, "eng": 179.0, "view": 15.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5115.0, "eng": 521.0, "view": 46.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 4471.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 7752.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2701.0, "eng": 317.0, "view": 35.0, "click": 0.0}, {"date": "2026-07-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 7252.0, "eng": 901.0, "view": 78.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2725.0, "eng": 276.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4441.0, "eng": 525.0, "view": 56.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2580.0, "eng": 215.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4483.0, "eng": 394.0, "view": 30.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2422.0, "eng": 204.0, "view": 16.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4461.0, "eng": 349.0, "view": 24.0, "click": 1.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2995.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5666.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2817.0, "eng": 300.0, "view": 17.0, "click": 1.0}, {"date": "2026-07-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6559.0, "eng": 747.0, "view": 47.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2416.0, "eng": 225.0, "view": 15.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4435.0, "eng": 469.0, "view": 45.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2433.0, "eng": 165.0, "view": 19.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4354.0, "eng": 413.0, "view": 35.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2323.0, "eng": 135.0, "view": 12.0, "click": 1.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4173.0, "eng": 392.0, "view": 29.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2953.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6542.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2632.0, "eng": 240.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6644.0, "eng": 827.0, "view": 75.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2476.0, "eng": 223.0, "view": 11.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4069.0, "eng": 388.0, "view": 38.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2460.0, "eng": 178.0, "view": 11.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4216.0, "eng": 436.0, "view": 23.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 224.0, "eng": 19.0, "view": 2.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2937.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5655.0, "eng": 7.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2688.0, "eng": 274.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-15", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6497.0, "eng": 856.0, "view": 77.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2517.0, "eng": 225.0, "view": 18.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4057.0, "eng": 465.0, "view": 52.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2562.0, "eng": 225.0, "view": 18.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3964.0, "eng": 470.0, "view": 40.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2984.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5666.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2527.0, "eng": 225.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-16", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5682.0, "eng": 729.0, "view": 66.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2201.0, "eng": 180.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4007.0, "eng": 533.0, "view": 67.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2168.0, "eng": 137.0, "view": 11.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3857.0, "eng": 403.0, "view": 33.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2063.0, "eng": 163.0, "view": 11.0, "click": 1.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 5584.0, "eng": 589.0, "view": 47.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2540.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5545.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2506.0, "eng": 245.0, "view": 20.0, "click": 0.0}, {"date": "2026-07-17", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5840.0, "eng": 720.0, "view": 58.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2666.0, "eng": 199.0, "view": 23.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3988.0, "eng": 594.0, "view": 68.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2583.0, "eng": 252.0, "view": 22.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3920.0, "eng": 522.0, "view": 37.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2609.0, "eng": 310.0, "view": 40.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 7033.0, "eng": 969.0, "view": 82.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3456.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5712.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2920.0, "eng": 289.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-18", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5689.0, "eng": 825.0, "view": 68.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2565.0, "eng": 288.0, "view": 32.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4928.0, "eng": 728.0, "view": 73.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 3799.0, "eng": 389.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4872.0, "eng": 584.0, "view": 56.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 3337.0, "eng": 332.0, "view": 14.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4599.0, "eng": 609.0, "view": 55.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 4157.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6741.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 3499.0, "eng": 430.0, "view": 34.0, "click": 0.0}, {"date": "2026-07-19", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6777.0, "eng": 922.0, "view": 89.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2430.0, "eng": 268.0, "view": 21.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4326.0, "eng": 628.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2323.0, "eng": 227.0, "view": 14.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4194.0, "eng": 572.0, "view": 48.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2716.0, "eng": 325.0, "view": 33.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4163.0, "eng": 586.0, "view": 52.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2965.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5926.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2643.0, "eng": 373.0, "view": 36.0, "click": 0.0}, {"date": "2026-07-20", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6478.0, "eng": 987.0, "view": 87.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 3276.0, "eng": 381.0, "view": 31.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4149.0, "eng": 525.0, "view": 53.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2621.0, "eng": 270.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4067.0, "eng": 552.0, "view": 43.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2660.0, "eng": 329.0, "view": 32.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3991.0, "eng": 574.0, "view": 40.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3115.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5894.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 3541.0, "eng": 429.0, "view": 32.0, "click": 0.0}, {"date": "2026-07-21", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6153.0, "eng": 886.0, "view": 72.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2198.0, "eng": 222.0, "view": 26.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4483.0, "eng": 590.0, "view": 50.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2299.0, "eng": 246.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4177.0, "eng": 451.0, "view": 42.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2100.0, "eng": 202.0, "view": 20.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4075.0, "eng": 553.0, "view": 52.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2968.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6387.0, "eng": 7.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2485.0, "eng": 283.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-22", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6490.0, "eng": 921.0, "view": 62.0, "click": 0.0}, {"date": "2026-07-23", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3963.0, "eng": 479.0, "view": 58.0, "click": 0.0}, {"date": "2026-07-23", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3922.0, "eng": 452.0, "view": 44.0, "click": 0.0}, {"date": "2026-07-23", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3712.0, "eng": 485.0, "view": 36.0, "click": 0.0}, {"date": "2026-07-23", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5545.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-23", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5875.0, "eng": 787.0, "view": 57.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2171.0, "eng": 196.0, "view": 12.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3855.0, "eng": 482.0, "view": 41.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2175.0, "eng": 190.0, "view": 15.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3856.0, "eng": 430.0, "view": 42.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2234.0, "eng": 238.0, "view": 17.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3651.0, "eng": 464.0, "view": 40.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2733.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5423.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2411.0, "eng": 274.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-24", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5725.0, "eng": 733.0, "view": 73.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2414.0, "eng": 306.0, "view": 26.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3998.0, "eng": 569.0, "view": 51.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2184.0, "eng": 254.0, "view": 18.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3861.0, "eng": 543.0, "view": 46.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2446.0, "eng": 313.0, "view": 30.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3688.0, "eng": 461.0, "view": 43.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3085.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5215.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2767.0, "eng": 387.0, "view": 35.0, "click": 0.0}, {"date": "2026-07-25", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 5688.0, "eng": 777.0, "view": 59.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2255.0, "eng": 253.0, "view": 18.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4770.0, "eng": 653.0, "view": 65.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2424.0, "eng": 262.0, "view": 21.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4768.0, "eng": 592.0, "view": 49.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2509.0, "eng": 281.0, "view": 22.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4517.0, "eng": 561.0, "view": 44.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2791.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6741.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2480.0, "eng": 276.0, "view": 27.0, "click": 0.0}, {"date": "2026-07-26", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 7035.0, "eng": 1022.0, "view": 83.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2738.0, "eng": 345.0, "view": 30.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4522.0, "eng": 641.0, "view": 68.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2564.0, "eng": 287.0, "view": 27.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4137.0, "eng": 571.0, "view": 46.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2785.0, "eng": 335.0, "view": 33.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4117.0, "eng": 538.0, "view": 45.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3007.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 6929.0, "eng": 6.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2689.0, "eng": 338.0, "view": 32.0, "click": 0.0}, {"date": "2026-07-27", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6817.0, "eng": 998.0, "view": 69.0, "click": 1.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2745.0, "eng": 276.0, "view": 33.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4693.0, "eng": 625.0, "view": 60.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2665.0, "eng": 259.0, "view": 21.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4768.0, "eng": 580.0, "view": 47.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2482.0, "eng": 291.0, "view": 35.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4423.0, "eng": 553.0, "view": 45.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3063.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 7407.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2657.0, "eng": 326.0, "view": 19.0, "click": 0.0}, {"date": "2026-07-28", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 7123.0, "eng": 1112.0, "view": 96.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2704.0, "eng": 327.0, "view": 27.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4560.0, "eng": 597.0, "view": 60.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2586.0, "eng": 266.0, "view": 26.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4425.0, "eng": 590.0, "view": 50.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2575.0, "eng": 293.0, "view": 20.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4354.0, "eng": 631.0, "view": 58.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3404.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 7234.0, "eng": 8.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2694.0, "eng": 371.0, "view": 31.0, "click": 1.0}, {"date": "2026-07-29", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6808.0, "eng": 989.0, "view": 80.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2696.0, "eng": 355.0, "view": 40.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 4356.0, "eng": 589.0, "view": 66.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2763.0, "eng": 342.0, "view": 43.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4050.0, "eng": 470.0, "view": 30.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2539.0, "eng": 298.0, "view": 28.0, "click": 1.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 4267.0, "eng": 547.0, "view": 45.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3487.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 5971.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2856.0, "eng": 337.0, "view": 27.0, "click": 0.0}, {"date": "2026-07-30", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 6343.0, "eng": 869.0, "view": 76.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2884.0, "eng": 337.0, "view": 33.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 1990.0, "eng": 293.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2568.0, "eng": 320.0, "view": 25.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 2070.0, "eng": 287.0, "view": 30.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2093.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 2385.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2573.0, "eng": 360.0, "view": 21.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 1553.0, "eng": 235.0, "view": 24.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3332.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 2776.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2826.0, "eng": 385.0, "view": 29.0, "click": 0.0}, {"date": "2026-07-31", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 2437.0, "eng": 367.0, "view": 30.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2166.0, "eng": 311.0, "view": 34.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3033.0, "eng": 404.0, "view": 37.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1973.0, "eng": 234.0, "view": 22.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3004.0, "eng": 388.0, "view": 29.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2183.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3473.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1929.0, "eng": 254.0, "view": 17.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3005.0, "eng": 393.0, "view": 18.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2591.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3756.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2254.0, "eng": 294.0, "view": 23.0, "click": 0.0}, {"date": "2026-08-01", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3543.0, "eng": 546.0, "view": 39.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2325.0, "eng": 338.0, "view": 31.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3638.0, "eng": 510.0, "view": 43.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2330.0, "eng": 331.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3545.0, "eng": 461.0, "view": 41.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2487.0, "eng": 2.0, "view": 0.0, "click": 1.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3559.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2337.0, "eng": 306.0, "view": 22.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3356.0, "eng": 443.0, "view": 28.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3063.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4537.0, "eng": 2.0, "view": 0.0, "click": 1.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2691.0, "eng": 388.0, "view": 42.0, "click": 0.0}, {"date": "2026-08-02", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4179.0, "eng": 664.0, "view": 59.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2775.0, "eng": 357.0, "view": 31.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3786.0, "eng": 553.0, "view": 49.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2652.0, "eng": 339.0, "view": 27.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3723.0, "eng": 460.0, "view": 39.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2622.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3713.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2513.0, "eng": 323.0, "view": 32.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3536.0, "eng": 449.0, "view": 28.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3245.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4860.0, "eng": 1.0, "view": 0.0, "click": 1.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2931.0, "eng": 408.0, "view": 35.0, "click": 0.0}, {"date": "2026-08-03", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4575.0, "eng": 686.0, "view": 55.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2604.0, "eng": 383.0, "view": 38.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3795.0, "eng": 579.0, "view": 58.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2509.0, "eng": 292.0, "view": 18.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3868.0, "eng": 593.0, "view": 34.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2515.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3924.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2467.0, "eng": 300.0, "view": 31.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3842.0, "eng": 531.0, "view": 48.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3169.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4913.0, "eng": 8.0, "view": 0.0, "click": 1.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2920.0, "eng": 391.0, "view": 38.0, "click": 0.0}, {"date": "2026-08-04", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 4369.0, "eng": 597.0, "view": 52.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2324.0, "eng": 235.0, "view": 21.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3512.0, "eng": 464.0, "view": 42.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2243.0, "eng": 262.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3581.0, "eng": 481.0, "view": 45.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2398.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3817.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2388.0, "eng": 232.0, "view": 14.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3808.0, "eng": 501.0, "view": 46.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3361.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4735.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2533.0, "eng": 331.0, "view": 31.0, "click": 0.0}, {"date": "2026-08-05", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3562.0, "eng": 459.0, "view": 42.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2707.0, "eng": 269.0, "view": 27.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3653.0, "eng": 512.0, "view": 47.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2445.0, "eng": 300.0, "view": 24.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3293.0, "eng": 435.0, "view": 34.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2264.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3676.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2191.0, "eng": 233.0, "view": 20.0, "click": 1.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3377.0, "eng": 415.0, "view": 31.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2816.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4493.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2660.0, "eng": 390.0, "view": 36.0, "click": 0.0}, {"date": "2026-08-06", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3988.0, "eng": 597.0, "view": 47.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2019.0, "eng": 220.0, "view": 20.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3433.0, "eng": 470.0, "view": 48.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1992.0, "eng": 198.0, "view": 14.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3070.0, "eng": 379.0, "view": 32.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2335.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3604.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2576.0, "eng": 292.0, "view": 22.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3427.0, "eng": 482.0, "view": 42.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2656.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4190.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2021.0, "eng": 256.0, "view": 31.0, "click": 0.0}, {"date": "2026-08-07", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3698.0, "eng": 483.0, "view": 34.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2416.0, "eng": 268.0, "view": 26.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3138.0, "eng": 427.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1946.0, "eng": 230.0, "view": 17.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3116.0, "eng": 420.0, "view": 42.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 1954.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3189.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2687.0, "eng": 320.0, "view": 24.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 2681.0, "eng": 371.0, "view": 37.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2444.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3737.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2123.0, "eng": 290.0, "view": 21.0, "click": 0.0}, {"date": "2026-08-08", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 2981.0, "eng": 404.0, "view": 32.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2024.0, "eng": 261.0, "view": 21.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3074.0, "eng": 427.0, "view": 50.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2325.0, "eng": 239.0, "view": 21.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3066.0, "eng": 377.0, "view": 35.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2064.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3229.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1970.0, "eng": 227.0, "view": 24.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3002.0, "eng": 413.0, "view": 32.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2451.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3611.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2135.0, "eng": 327.0, "view": 18.0, "click": 0.0}, {"date": "2026-08-09", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3068.0, "eng": 398.0, "view": 29.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2343.0, "eng": 274.0, "view": 20.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3426.0, "eng": 444.0, "view": 35.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2261.0, "eng": 280.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3672.0, "eng": 435.0, "view": 35.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2245.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3372.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2832.0, "eng": 362.0, "view": 30.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3096.0, "eng": 475.0, "view": 42.0, "click": 1.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2733.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3920.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2496.0, "eng": 337.0, "view": 28.0, "click": 0.0}, {"date": "2026-08-10", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3473.0, "eng": 522.0, "view": 46.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2309.0, "eng": 299.0, "view": 29.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3387.0, "eng": 463.0, "view": 37.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2273.0, "eng": 303.0, "view": 22.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3298.0, "eng": 452.0, "view": 35.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2201.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3656.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2216.0, "eng": 263.0, "view": 20.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3395.0, "eng": 503.0, "view": 33.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2754.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3990.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2907.0, "eng": 381.0, "view": 29.0, "click": 0.0}, {"date": "2026-08-11", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3855.0, "eng": 613.0, "view": 61.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2585.0, "eng": 351.0, "view": 32.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3832.0, "eng": 521.0, "view": 34.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2133.0, "eng": 268.0, "view": 27.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3568.0, "eng": 451.0, "view": 41.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2379.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3762.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2838.0, "eng": 332.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3347.0, "eng": 519.0, "view": 37.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 3143.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 4413.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2476.0, "eng": 330.0, "view": 27.0, "click": 0.0}, {"date": "2026-08-12", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3399.0, "eng": 442.0, "view": 42.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2031.0, "eng": 218.0, "view": 18.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3242.0, "eng": 438.0, "view": 45.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1999.0, "eng": 214.0, "view": 20.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3172.0, "eng": 437.0, "view": 40.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2279.0, "eng": 0.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3340.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2075.0, "eng": 238.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3372.0, "eng": 392.0, "view": 37.0, "click": 1.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2867.0, "eng": 2.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3700.0, "eng": 3.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2128.0, "eng": 280.0, "view": 25.0, "click": 0.0}, {"date": "2026-08-13", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3150.0, "eng": 415.0, "view": 32.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 0-2", "impr": 2068.0, "eng": 239.0, "view": 21.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "CLOSE THE GAP", "asset": "Animation Video", "aud": "Parents with kids from 5-15", "impr": 3034.0, "eng": 421.0, "view": 35.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 2019.0, "eng": 218.0, "view": 23.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 2931.0, "eng": 377.0, "view": 33.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 0-2", "impr": 2413.0, "eng": 5.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "KNOW THE RISK", "asset": "Social", "aud": "Parents with kids from 5-15", "impr": 3246.0, "eng": 1.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 0-2", "impr": 1762.0, "eng": 206.0, "view": 14.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Expert Video", "aud": "Parents with kids from 5-15", "impr": 3087.0, "eng": 427.0, "view": 37.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 0-2", "impr": 2680.0, "eng": 6.0, "view": 0.0, "click": 1.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "KV", "aud": "Parents with kids from 5-15", "impr": 3878.0, "eng": 4.0, "view": 0.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 0-2", "impr": 2381.0, "eng": 322.0, "view": 26.0, "click": 0.0}, {"date": "2026-08-14", "obj": "Reach", "pillar": "PROTECT ON TIME", "asset": "Master Video", "aud": "Parents with kids from 5-15", "impr": 3359.0, "eng": 510.0, "view": 44.0, "click": 0.0}];
+const KPI  = [{"obj": "Reach", "asset": "Animation Video", "aud": "Mom with kids from 5-15", "budget": 17450281.0, "qty": 736.0, "impr": 727082.0, "eng": 438.0, "view": 0.0, "click": 806.0}, {"obj": "Reach", "asset": "Animation Video", "aud": "Mom with kids from 0-2", "budget": 11156766.0, "qty": 451.0, "impr": 464865.0, "eng": 267.0, "view": 0.0, "click": 508.0}, {"obj": "Reach", "asset": "Expert Video", "aud": "Mom with kids from 5-15", "budget": 14541922.0, "qty": 620.0, "impr": 605901.0, "eng": 371.0, "view": 0.0, "click": 659.0}, {"obj": "Reach", "asset": "Expert Video", "aud": "Mom with kids from 0-2", "budget": 9297293.0, "qty": 384.0, "impr": 387373.0, "eng": 218.0, "view": 0.0, "click": 441.0}, {"obj": "Reach", "asset": "KV", "aud": "Mom with kids from 5-15", "budget": 16480828.0, "qty": 689.0, "impr": 686699.0, "eng": 416.0, "view": 0.0, "click": 754.0}, {"obj": "Reach", "asset": "KV", "aud": "Mom with kids from 0-2", "budget": 10536929.0, "qty": 442.0, "impr": 439036.0, "eng": 260.0, "view": 0.0, "click": 481.0}, {"obj": "Reach", "asset": "Master Video", "aud": "Mom with kids from 5-15", "budget": 19389214.0, "qty": 806.0, "impr": 807885.0, "eng": 481.0, "view": 0.0, "click": 884.0}, {"obj": "Reach", "asset": "Master Video", "aud": "Mom with kids from 0-2", "budget": 12396384.0, "qty": 520.0, "impr": 516516.0, "eng": 312.0, "view": 0.0, "click": 572.0}, {"obj": "Reach", "asset": "Event", "aud": "Mom with kids from 5-15", "budget": 14541917.0, "qty": 611.0, "impr": 605917.0, "eng": 364.0, "view": 0.0, "click": 663.0}, {"obj": "Reach", "asset": "Event", "aud": "Mom with kids from 0-2", "budget": 9297288.0, "qty": 390.0, "impr": 387387.0, "eng": 234.0, "view": 0.0, "click": 429.0}, {"obj": "Reach", "asset": "Social", "aud": "Mom with kids from 5-15", "budget": 14541915.0, "qty": 568.0, "impr": 605923.0, "eng": 383.0, "view": 0.0, "click": 691.0}, {"obj": "Reach", "asset": "Social", "aud": "Mom with kids from 0-2", "budget": 9297251.0, "qty": 383.0, "impr": 387359.0, "eng": 229.0, "view": 0.0, "click": 414.0}, {"obj": "Traffic", "asset": "Expert Video", "aud": "Mom with kids from 5-15", "budget": 12243530.0, "qty": 8175.0, "impr": 637680.0, "eng": 7599.0, "view": 1375.0, "click": 8175.0}, {"obj": "Traffic", "asset": "Expert Video", "aud": "Mom with kids from 0-2", "budget": 7827821.0, "qty": 5220.0, "impr": 407695.0, "eng": 4849.0, "view": 864.0, "click": 5220.0}, {"obj": "Traffic", "asset": "KV", "aud": "Mom with kids from 5-15", "budget": 6121765.0, "qty": 4082.0, "impr": 318838.0, "eng": 3796.0, "view": 689.0, "click": 4082.0}, {"obj": "Traffic", "asset": "KV", "aud": "Mom with kids from 0-2", "budget": 3913910.0, "qty": 2613.0, "impr": 203853.0, "eng": 2431.0, "view": 442.0, "click": 2613.0}, {"obj": "Traffic", "asset": "Event", "aud": "Mom with kids from 5-15", "budget": 18365282.0, "qty": 12246.0, "impr": 956514.0, "eng": 11388.0, "view": 2067.0, "click": 12246.0}, {"obj": "Traffic", "asset": "Event", "aud": "Mom with kids from 0-2", "budget": 11741743.0, "qty": 7826.0, "impr": 611546.0, "eng": 7280.0, "view": 1313.0, "click": 7826.0}, {"obj": "Traffic", "asset": "Social", "aud": "Mom with kids from 5-15", "budget": 85704659.0, "qty": 57112.0, "impr": 4463723.0, "eng": 53173.0, "view": 9642.0, "click": 57112.0}, {"obj": "Traffic", "asset": "Social", "aud": "Mom with kids from 0-2", "budget": 54794783.0, "qty": 36512.0, "impr": 2853864.0, "eng": 33951.0, "view": 6130.0, "click": 36512.0}];
+const META = {"cpmReach": 24000, "cpcTraffic": 1500, "campaignStart": "2026-06-18", "campaignEnd": "2026-10-31", "dataMinDate": "2026-06-18", "dataMaxDate": "2026-08-14", "nRows": 568};
+const REPORT = {"window": {"start": "2026-06-14", "end": "2026-06-30"}, "regionWindow": {"start": "2026-05-01", "end": "2026-07-31"}, "region": [{"name": "Hanoi", "reach": 726418.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Ho Chi Minh City", "reach": 591798.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bình Dương Province", "reach": 245448.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bà Rịa–Vũng Tàu Province", "reach": 118954.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Nghệ An Province", "reach": 34820.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Thanh Hóa Province", "reach": 32990.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Đắk Lắk Province", "reach": 30045.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bắc Giang Province", "reach": 23870.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Phú Thọ Province", "reach": 18627.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Sơn La Province", "reach": 18514.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hải Dương Province", "reach": 18074.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hà Tĩnh Province", "reach": 18018.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Thái Nguyên Province", "reach": 17722.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Gia Lai Province", "reach": 17496.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Đồng Nai Province", "reach": 17098.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bắc Ninh Province", "reach": 15531.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Vĩnh Phúc Province", "reach": 15106.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Nam Định Province", "reach": 14866.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Lạng Sơn Province", "reach": 14490.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Quảng Ngãi Province", "reach": 14124.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Kiên Giang Province", "reach": 13925.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Yên Bái Province", "reach": 13874.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bình Định Province", "reach": 13737.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Tuyên Quang Province", "reach": 13683.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Lâm Đồng Province", "reach": 13503.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Quảng Ninh Province", "reach": 13414.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bình Thuận Province", "reach": 13331.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "An Giang Province", "reach": 13303.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hòa Bình Province", "reach": 13237.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Quảng Bình Province", "reach": 13106.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Thái Bình Province", "reach": 12998.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Quảng Nam Province", "reach": 12890.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Phú Yên Province", "reach": 12877.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Tiền Giang Province", "reach": 12573.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bình Phước Province", "reach": 12231.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Thừa Thiên–Huế Province", "reach": 11869.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Long An Province", "reach": 11278.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Sóc Trăng Province", "reach": 11090.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Đồng Tháp Province", "reach": 10886.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hưng Yên Province", "reach": 10821.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Đắk Nông Province", "reach": 10393.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Lào Cai Province", "reach": 10253.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Quảng Trị Province", "reach": 10049.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Tây Ninh Province", "reach": 9963.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Cà Mau Province", "reach": 9763.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Trà Vinh Province", "reach": 9498.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Ninh Bình Province", "reach": 9242.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Haiphong", "reach": 9078.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bến Tre Province", "reach": 8978.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Khánh Hòa Province", "reach": 8711.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hà Giang Province", "reach": 8666.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hà Nam Province", "reach": 8516.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Cao Bằng Province", "reach": 8435.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bạc Liêu Province", "reach": 8257.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Điện Biên Province", "reach": 7610.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Kon Tum Province", "reach": 7595.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Ninh Thuận Province", "reach": 7024.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Bắc Kạn Province", "reach": 6550.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Vĩnh Long Province", "reach": 6442.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Cần Thơ", "reach": 6179.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Da Nang", "reach": 5217.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Hậu Giang Province", "reach": 4037.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Lai Châu Province", "reach": 3666.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Unknown", "reach": 14.0, "impr": 0.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}], "placement": [{"name": "Facebook Reels", "reach": 1080805.0, "impr": 1527628.0, "eng": 37668.0, "tp": 2509.0, "clk": 1544.0}, {"name": "Feed", "reach": 611874.0, "impr": 685173.0, "eng": 64440.0, "tp": 5021.0, "clk": 2007.0}, {"name": "Ads on Facebook Reels", "reach": 152648.0, "impr": 152892.0, "eng": 0.0, "tp": 0.0, "clk": 15.0}, {"name": "In-stream reels", "reach": 71716.0, "impr": 85391.0, "eng": 97.0, "tp": 10.0, "clk": 6.0}, {"name": "Facebook Stories", "reach": 51605.0, "impr": 55408.0, "eng": 25.0, "tp": 6.0, "clk": 10.0}, {"name": "Instagram Reels", "reach": 13280.0, "impr": 15458.0, "eng": 280.0, "tp": 23.0, "clk": 1.0}, {"name": "Instagram Stories", "reach": 1445.0, "impr": 1499.0, "eng": 11.0, "tp": 4.0, "clk": 0.0}, {"name": "Search results", "reach": 626.0, "impr": 666.0, "eng": 30.0, "tp": 1.0, "clk": 0.0}, {"name": "Instagram search results", "reach": 39.0, "impr": 39.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}, {"name": "Facebook profile feed", "reach": 4.0, "impr": 4.0, "eng": 0.0, "tp": 0.0, "clk": 0.0}], "age": [{"name": "35-44", "reach": 532945.0, "impr": 600069.0, "eng": 21559.0, "tp": 1813.0, "clk": 746.0}, {"name": "25-34", "reach": 462845.0, "impr": 512464.0, "eng": 13147.0, "tp": 1131.0, "clk": 764.0}, {"name": "45-54", "reach": 431691.0, "impr": 510314.0, "eng": 25760.0, "tp": 1803.0, "clk": 647.0}, {"name": "18-24", "reach": 348223.0, "impr": 382932.0, "eng": 8053.0, "tp": 826.0, "clk": 496.0}, {"name": "55-64", "reach": 297627.0, "impr": 352837.0, "eng": 22083.0, "tp": 1301.0, "clk": 616.0}, {"name": "65+", "reach": 136708.0, "impr": 165542.0, "eng": 11949.0, "tp": 700.0, "clk": 314.0}], "weekly": [], "ageGender": {"age": [{"label": "18-24", "impr": 439713.0, "eng": 11393.0, "view": 1143.0, "er": 0.025910082258200236, "vr": 0.0025994228053298402, "ctr": 0.0013895427244589083}, {"label": "25-34", "impr": 1425315.0, "eng": 89481.0, "view": 7713.0, "er": 0.0627798065690742, "vr": 0.005411435366918892, "ctr": 0.0019055436868341384}, {"label": "35-44", "impr": 1218557.0, "eng": 74650.0, "view": 6407.0, "er": 0.06126098327776214, "vr": 0.005257858270068614, "ctr": 0.001596970843382788}, {"label": "45-54", "impr": 566741.0, "eng": 29294.0, "view": 2095.0, "er": 0.051688513800836715, "vr": 0.0036965739200093164, "ctr": 0.0012757150091488}, {"label": "55-64", "impr": 390769.0, "eng": 25333.0, "view": 1520.0, "er": 0.06482858159168205, "vr": 0.0038897660766335097, "ctr": 0.0017478356778557152}, {"label": "65+", "impr": 184766.0, "eng": 14155.0, "view": 837.0, "er": 0.07661041533615492, "vr": 0.004530054230756741, "ctr": 0.0019754716776896183}], "gender": [{"label": "Female", "impr": 2261248.0, "eng": 161275.0, "view": 13213.0, "er": 0.07132123499943394, "vr": 0.00584323347107438, "ctr": 0.0019670553605796444}, {"label": "Male", "impr": 1940083.0, "eng": 82123.0, "view": 6431.0, "er": 0.042329632288927846, "vr": 0.003314806634561511, "ctr": 0.001313345872315772}, {"label": "Unknown", "impr": 24530.0, "eng": 908.0, "view": 71.0, "er": 0.03701589889930697, "vr": 0.0028944150020383205, "ctr": 0.001956787607011822}], "grand": {"label": "Grand Total", "impr": 4225861.0, "eng": 244306.0, "view": 19715.0, "er": 0.05781212396716314, "vr": 0.0046653214575680555, "ctr": 0.0016668792466198012}, "period": {"start": "2026-06-01", "end": "2026-10-31"}}, "posts": [{"campaign": "CEZUE004_Facebook_Reach_CLOSE THE GAP_Animation Video_6/30/2026", "impr": 259134.0, "eng": 30135.0, "link": "https://www.facebook.com/reel/1684580352660760"}, {"campaign": "CEZUE004_Facebook_Reach_KNOW THE RISK_Animation Video_6/20/2026", "impr": 145595.0, "eng": 10493.0, "link": "https://web.facebook.com/reel/4342952035970450/?__cft__[0]=AZZr8ydF6DF0-S2Rq8fkPMjo5n9vWV9uLLEH_7ou4wreSHgSNg1kgjuL4Q2nliaXst3HQlx00c-QRReWO__zv5rtF1aJnzvTOZzau7c8vSFXD7twQfdK1pJ65NAlrXgY3_1OG5cbxgp775b4pjSt7eCtiPeJE_1Gmu6FVlIJFAdRVCURz90Z9tPPwWyOz7nsh-8r35kkkjIt6VXrolgXojsc&__tn__=%2CO%2CP-R"}, {"campaign": "CEZUE004_Facebook_Reach_KNOW THE RISK_Event_6/19/2026", "impr": 384366.0, "eng": 358.0, "link": "https://web.facebook.com/permalink.php?story_fbid=pfbid02y1hUX7bnaafxHnxT4D17yS19ehBiV8Hu4TmunBHgmFJ7zM2BEfDYermRnvM6gYNkl&id=61590657441302&__cft__[0]=AZY0leTxuodxZCybGEN4Bt0YfcTS_PyosDeLgjYJhLwhBb4WjdXE1PbYO6fXS7O0vuciJCDKkYEZ3nF9maHFGveuoIGNMDEK4B9Nko719w53cTw1MQe_ZdbQtgKjg9SCuOrUiqVGrOkow_t5JcrBfLOk_3QuTiS8FsUOB8hgcrkMFwEHRHsqpvqf2QWOkVCnSPfBGvfj1C6P-ssblI9bZcfl&__tn__=%2CO%2CP-R"}, {"campaign": "CEZUE004_Facebook_Reach_KNOW THE RISK_Expert Video_6/26/2026", "impr": 315801.0, "eng": 33817.0, "link": "https://www.facebook.com/reel/2101904463721494"}, {"campaign": "CEZUE004_Facebook_Reach_KNOW THE RISK_Social_7/30/2026", "impr": 57484.0, "eng": 21.0, "link": ""}, {"campaign": "CEZUE004_Facebook_Reach_PROTECT ON TIME_Event_6/24/2026", "impr": 327062.0, "eng": 226.0, "link": "https://web.facebook.com/permalink.php?story_fbid=pfbid0GstMWUKmp7hVPd7G4c7CMc9bhBgJWSsnk1nfSpQ1NvPodpVnRD9skPtjSqa3Fjbol&id=61590657441302&__cft__[0]=AZbAYOXFZc-0-_H1SeQ1_zyr_01camXG82Tvcs6_Jn8ykh8JwajevxE8VPa8CMVx9yqQoodTHrytgAPvDAAL1kvZjqLiw8ymqnsDj1LWTfyZaDyp6cQpssNZUWMN8NTY2deZS92qHTITAm6DNTnLH6_RPyT6hJJ2cdMcnzETaDfpnhQoM4FBopqQsVkIPwb6f9GIDAgGZRB8FtfON_lnLkPc&__tn__=%2CO%2CP-R"}, {"campaign": "CEZUE004_Facebook_Reach_PROTECT ON TIME_Expert Video_6/27/2026", "impr": 67675.0, "eng": 4551.0, "link": "https://www.facebook.com/reel/1794652528049221"}, {"campaign": "CEZUE004_Facebook_Reach_PROTECT ON TIME_KV_6/22/2026", "impr": 1130303.0, "eng": 677.0, "link": "https://web.facebook.com/permalink.php?story_fbid=pfbid01JwJUpBA3uUVGPxkmnuc8Y7BupW5EwxqrHG5GP2228CHymguwza44ZDp9Au3gVj1l&id=61590657441302&__cft__[0]=AZaMo43yV0os2ybtKFUeom-0tzQKZmQzHAxKax3cmrkOcFSHXMoTaswi7LfEabY6c88FINgnY6TxHoHKav3UCLUo3WP73Lu_-DqEIa9TGhBQO45h-XlqKd8VD3TWJvG54hjOiOracpz08DO5LAh0VG-FNv8R0djlrNQQaEDr8bX91YEp0vi7G-RaTCLxInoYg982u8gTPy7XjCUpl5o2slPl&__tn__=%2CO%2CP-R"}, {"campaign": "CEZUE004_Facebook_Reach_PROTECT ON TIME_Master Video_6/18/2026", "impr": 1179426.0, "eng": 127795.0, "link": ""}], "totals": {"impr": 2524158.0, "reachAge": 2210039.0, "reachRegion": 2442771.0, "eng": 102551.0, "clk": 3583.0, "freq": 1.6653193668824704, "freqSrc": "region", "reachDedup": 2234593.0, "imprDedup": 3721311.0}, "hasData": true};   // Meta Ads breakdown (Region/Placement/Age) — ảnh chụp cố định
+const GENERATED = "2026-08-14 14:25 (giờ VN)";
+
+/* ============================ i18n (EN ⇄ VI) ============================ */
+let L = (localStorage.getItem('zpLang') || 'vi');
+const T = {
+ vi:{
+  title:'IMOJEV — Bảng đo hiệu suất Facebook', sub:'Zuellig Pharma · Chiến dịch IMOJEV · Flight', refresh:'Cập nhật', langBtn:'EN',
+  rAll:'Cả chiến dịch', rL7d:'7 ngày gần nhất', rL14d:'14 ngày gần nhất', rMtd:'Tháng này (MTD)', rToday:'Ngày mới nhất',
+  defsH:'Đọc nhanh 30 giây — các con số nghĩa là gì?', defsHint:'Giải thích đơn giản nhất',
+  poolH:'Độ phủ tệp mục tiêu — Reach / Pool size', poolHint:'Phạm vi Toàn Việt Nam · Pool = ước tính Meta · %Reach ≈ điểm giữa dải',
+  trendH:'Diễn tiến theo ngày', legDaily:'Impression / ngày', legCum:'Impression luỹ kế', legIdeal:'Nhịp chuẩn (mục tiêu theo thời gian)',
+  funnelH:'Hành trình người dùng — từ nhìn thấy đến bấm tìm hiểu', donutH:'Tỷ trọng tiếp cận theo nội dung', donutTotal:'Tổng tiếp cận',
+  ovH:'Tổng quan — Objective × Asset', ovHint:'Mục tiêu = cho cả chiến dịch · Kết quả thực tế = số đã đạt tới thời điểm đang xem',
+  audH:'Audience × Creative', audHint:'Theo nhóm phụ huynh', deepH:'Deepdive — Pillar × Asset', deepHint:'%VR = View/Impression · %CTR = Click/Impression',
+  tagline:'IMOJEV — Tiêm liều nhắc, chắc tương lai', noData:'chưa có dữ liệu',
+  kSpend:'Chi phí (Ext)', kImpr:'Lượt hiển thị', kEng:'Lượt tương tác', kView:'Lượt xem (Thruplay)', kClick:'Lượt bấm link', actualTag:'Thực tế (lũy kế)',
+  target:'Mục tiêu', reached:'đạt', clickLater:'Nhánh kéo click chạy ở <b>giai đoạn sau</b>', soon:'Sắp khởi động',
+  pAhead:'Vượt tiến độ ✓', pOn:'Đúng nhịp ✓', pSpeed:'Đang tăng tốc',
+  flDay:'Flight: ngày', flTime:'thời gian đã trôi', flBudget:'ngân sách đã giải ngân', flOk:'Đúng/vượt nhịp', flOpt:'Đang tối ưu chi phí',
+  fImpr:'Hiển thị', fEng:'Tương tác', fView:'Xem video', fClick:'Bấm link', fStart:'100% — điểm khởi đầu', fOf:'của lượt hiển thị', fKept:'giữ lại', fPrev:'so với bước trước',
+  poolSize:'Pool size', uReach:'Unique reach', pctReach:'%Reach pool', notFilled:'chưa điền', poolHintCard:'→ Điền Unique Reach (từ Meta) để hiện %.', ppl:'người',
+  cObjAsset:'Objective / Asset', cBudget:'KPI Budget', cQty:'KPI Qty', cSpend:'Actual Spend', cImpr:'Impression', cClick:'Click', cAchKpi:'Đạt (theo KPI)', cGrand:'GRAND TOTAL',
+  cBuy:'Cách mua', cUnit:'Đơn giá',
+  delivH:'Tiến độ delivery — Kế hoạch vs Thực tế', dBranch:'Nhánh', dMetric:'Chỉ tiêu', dGoal:'Mục tiêu cả CD', dPlan:'KH đến hôm nay', dActual:'Thực tế', dPace:'Tiến độ',
+  dPlanNote:'Kế hoạch đến hôm nay = mục tiêu × % thời gian flight (ngày {d}/{t}) · nhánh Traffic chạy giai đoạn sau',
+  cAudAsset:'Audience / Asset', cObj:'Objective', cView:'View', cAch:'Đạt', cPillarAsset:'Pillar / Asset', cView15:'View 15s',
+  nx:'Nhận xét', sumBadge:'✓ Chiến dịch đang chạy tốt', updatedAt:'Số liệu cập nhật lúc', liveSrc:'Nguồn LIVE từ Google Sheet · cập nhật lúc',
+  repH:'Chân dung tiếp cận — từ báo cáo Meta Ads', repHint:'Ảnh chụp từ Meta Ads Manager',
+  repGeoH:'Top tỉnh / thành phố tiếp cận', repPlaceH:'Vị trí hiển thị (Placement)',
+  repFreqH:'Tần suất — mỗi người thấy mấy lần',
+  repWinLead:'Số liệu Meta breakdown cho giai đoạn', repWinTail:'(ảnh chụp cố định) · phần còn lại của dashboard cập nhật realtime theo ngày.',
+  repPeople:'người', repImpr:'lượt hiển thị', repReachSub:'người tiếp cận',
+  repGeoNote:'Cột = số người tiếp cận (Reach) theo tỉnh · % = TỶ TRỌNG trên TỔNG reach toàn quốc (KHÔNG phải %reach trên pool size).',
+  repGeoUnit:'tỉnh/thành',
+  repPlaceNote:'Reels gánh phần lớn lượt hiển thị (đẩy reach), Feed mang lại tương tác cao nhất. (Chia theo lượt hiển thị vì 1 người có thể thấy ở nhiều vị trí.)',
+  repFreqNote:'Mỗi người tiếp cận nhìn thấy IMOJEV trung bình bằng đây lần. Tần suất còn thấp = đang phủ RỘNG người mới, chưa "bội thực" quảng cáo — còn nhiều dư địa nhắc lại ở giai đoạn sau.',
+  repFreqUnit:'lần / người', freqOverall:'Tần suất trung bình',
+  freqLeg:'Tần suất / tuần', freqChartCap:'Tần suất trung bình toàn kỳ',
+  repByAge:'Theo độ tuổi', repByGender:'Theo giới tính', agAge:'Độ tuổi', agGender:'Giới tính', agTotal:'Tổng',
+  cPost:'Bài đăng', cPillar:'Chủ đề', repPostsH:'Bài đăng đã chạy', repPostsNote:'Bấm tên bài (↗) để mở post thật trên Facebook.',
+  agLegend:'%ER = tỷ lệ tương tác · %VR = tỷ lệ xem · CTR = tỷ lệ bấm (đều tính trên tổng hiển thị)',
+ },
+ en:{
+  title:'IMOJEV — Facebook Performance Dashboard', sub:'Zuellig Pharma · IMOJEV campaign · Flight', refresh:'Refresh', langBtn:'VI',
+  rAll:'Whole campaign', rL7d:'Last 7 days', rL14d:'Last 14 days', rMtd:'This month (MTD)', rToday:'Latest day',
+  defsH:'30-second read — what do the numbers mean?', defsHint:'Explained simply',
+  poolH:'Target pool coverage — Reach / Pool size', poolHint:'Scope: All Vietnam · Pool = Meta estimate · %Reach ≈ range midpoint',
+  trendH:'Daily trend', legDaily:'Impressions / day', legCum:'Cumulative impressions', legIdeal:'Target pace (over time)',
+  funnelH:'User journey — from seeing to clicking to learn more', donutH:'Reach share by content', donutTotal:'Total reach',
+  ovH:'Overview — Objective × Asset', ovHint:'Target = whole campaign · Actual = delivered up to the viewed date',
+  audH:'Audience × Creative', audHint:'By parent group', deepH:'Deepdive — Pillar × Asset', deepHint:'%VR = View/Impression · %CTR = Click/Impression',
+  tagline:'IMOJEV — A timely booster for a protected future', noData:'no data',
+  kSpend:'Spending (Ext)', kImpr:'Impression', kEng:'Engagement', kView:'View (Thruplay)', kClick:'Link Click', actualTag:'Actual (cumulative)',
+  target:'Target', reached:'reached', clickLater:'Click campaign starts in a <b>later phase</b>', soon:'Coming soon',
+  pAhead:'Ahead of pace ✓', pOn:'On track ✓', pSpeed:'Ramping up',
+  flDay:'Flight: day', flTime:'of time elapsed', flBudget:'of budget spent', flOk:'On/ahead of pace', flOpt:'Optimizing spend',
+  fImpr:'Impressions', fEng:'Engagements', fView:'Video views', fClick:'Link clicks', fStart:'100% — starting point', fOf:'of impressions', fKept:'kept', fPrev:'vs previous step',
+  poolSize:'Pool size', uReach:'Unique reach', pctReach:'%Reach of pool', notFilled:'not filled', poolHintCard:'→ Enter Unique Reach (from Meta) to show %.', ppl:'people',
+  cObjAsset:'Objective / Asset', cBudget:'KPI Budget', cQty:'KPI Qty', cSpend:'Actual Spend', cImpr:'Impression', cClick:'Click', cAchKpi:'Achieved (vs KPI)', cGrand:'GRAND TOTAL',
+  cBuy:'Buying', cUnit:'Unit cost',
+  delivH:'Delivery pacing — Plan vs Actual', dBranch:'Branch', dMetric:'Metric', dGoal:'Whole-campaign goal', dPlan:'Plan to date', dActual:'Actual', dPace:'Pace',
+  dPlanNote:'Plan to date = goal × % of flight elapsed (day {d}/{t}) · Traffic branch starts in a later phase',
+  cAudAsset:'Audience / Asset', cObj:'Objective', cView:'View', cAch:'Achieved', cPillarAsset:'Pillar / Asset', cView15:'View 15s',
+  nx:'Comment', sumBadge:'✓ Campaign is on track', updatedAt:'Data updated at', liveSrc:'Source: LIVE from Google Sheet · updated at',
+  repH:'Audience reached — from the Meta Ads report', repHint:'Snapshot from Meta Ads Manager',
+  repGeoH:'Top provinces / cities reached', repPlaceH:'Placement',
+  repFreqH:'Frequency — how many times each person saw it',
+  repWinLead:'Meta breakdown for the period', repWinTail:'(fixed snapshot) · the rest of the dashboard updates daily in realtime.',
+  repPeople:'people', repImpr:'impressions', repReachSub:'people reached',
+  repGeoNote:'Bar = people reached (Reach) by province · % = SHARE OF TOTAL nationwide reach (NOT %reach of pool size).',
+  repGeoUnit:'provinces',
+  repPlaceNote:'Reels drives most impressions (pushing reach), Feed delivers the highest engagement. (Split by impressions since one person can be reached across placements.)',
+  repFreqNote:'On average each reached person saw IMOJEV this many times. Low frequency = we are reaching BROAD new people, not over-serving ads — plenty of room to reinforce later.',
+  repFreqUnit:'times / person', freqOverall:'Average frequency',
+  freqLeg:'Frequency / week', freqChartCap:'Average frequency to date',
+  repByAge:'By age', repByGender:'By gender', agAge:'Age', agGender:'Gender', agTotal:'Total',
+  cPost:'Post', cPillar:'Content pillar', repPostsH:'Posts that ran', repPostsNote:'Click a post name (↗) to open it on Facebook.',
+  agLegend:'%ER = engagement rate · %VR = view rate · CTR = click-through rate (all of impressions)',
+ }
+};
+function tt(k){ return (T[L] && T[L][k]!=null) ? T[L][k] : (T.vi[k]!=null?T.vi[k]:k); }
+const DEFS = [
+ {ic:'👀', vi:{h:'Lượt hiển thị <small>(Impression)</small>', p:'Số lần quảng cáo <b>xuất hiện trên màn hình</b> của user. Cùng 1 user lướt thấy 3 lần thì tính 3 lượt — nên đây là số <b>lần hiện ra</b>, chưa phải số người.'},
+             en:{h:'Impressions <small>(Impression)</small>', p:'The number of times the ad <b>appeared on screen</b>. If one user scrolls past it 3 times it counts as 3 — so this is the number of <b>times shown</b>, not the number of people.'}},
+ {ic:'👥', vi:{h:'Độ phủ <small>(Reach)</small>', p:'Số <b>tài khoản Meta (người thật)</b> đã thấy quảng cáo ít nhất 1 lần. Khác Lượt hiển thị: 1 user xem nhiều lần thì Reach vẫn chỉ tính <b>1</b>.'},
+             en:{h:'Reach <small>(Reach)</small>', p:'The number of <b>Meta accounts (real people)</b> that saw the ad at least once. Unlike Impressions: if one user views it many times, Reach still counts <b>1</b>.'}},
+ {ic:'❤️', vi:{h:'Lượt tương tác <small>(Engagement)</small>', p:'Tổng các hành động user làm với quảng cáo: thả cảm xúc, chia sẻ, lưu, bình luận, xem video 3 giây, xem ảnh, bấm link, bấm vào trang / theo dõi… — mọi lần user "động tay" vào bài.'},
+             en:{h:'Engagement <small>(Engagement)</small>', p:'All actions a user takes on the ad: reactions, shares, saves, comments, 3-second video plays, photo views, link clicks, profile clicks / follows… — every time a user interacts with the post.'}},
+ {ic:'▶️', vi:{h:'Lượt xem video <small>(View)</small>', p:'Số lần video được xem đủ lâu (từ 15 giây) — bao nhiêu người chịu dừng lại xem video của mình.'},
+             en:{h:'Video views <small>(View)</small>', p:'The number of times the video was watched long enough (15+ seconds) — how many people stopped to watch.'}},
+ {ic:'👆', vi:{h:'Lượt bấm link <small>(Link Click)</small>', p:'Số lần user bấm vào <b>link trong bài</b> để tới trang đích. Lưu ý: giai đoạn này <b>chưa chạy quảng cáo kéo click (Traffic)</b>, nên các click này là do user <b>tự bấm link ngay trong bài</b> nhận biết.'},
+             en:{h:'Link clicks <small>(Link Click)</small>', p:'The number of times a user clicked a <b>link in the post</b> to the destination. Note: the <b>click-driving (Traffic) ads have not started</b> yet, so these clicks come from users <b>clicking links inside the awareness posts</b> themselves.'}},
+ {ic:'💰', vi:{h:'Chi phí <small>(Spending)</small>', p:'Số tiền đã dùng để chạy quảng cáo cho tới lúc này.'},
+             en:{h:'Spending <small>(Spending)</small>', p:'The amount spent on the ads so far.'}},
+ {ic:'🎯', vi:{h:'Mục tiêu & Đúng tiến độ', p:'"Mục tiêu" là con số hứa đạt cho cả chiến dịch. Mới chạy được một phần thời gian mà kết quả đã vượt phần đó → nghĩa là đang <b>chạy nhanh hơn dự kiến</b>, rất tốt.'},
+             en:{h:'Target & pacing', p:'"Target" is the number promised for the whole campaign. If results already exceed the share of time elapsed → we are <b>running ahead of schedule</b>, which is great.'}},
+];
+function applyStatic(){
+  const S=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  S('hTitle',tt('title')); S('hSub',tt('sub')); S('refreshTxt',tt('refresh')); S('langBtn',tt('langBtn'));
+  const rs=document.getElementById('rangeSel'); const rm={all:'rAll',l7d:'rL7d',l14d:'rL14d',mtd:'rMtd',today:'rToday'};
+  if(rs)[...rs.options].forEach(o=>{if(rm[o.value])o.textContent=tt(rm[o.value]);});
+  ['defsH','defsHint','poolH','poolHint','delivH','trendH','legDaily','legCum','legIdeal','funnelH','donutH','ovH','ovHint','audH','audHint','deepH','deepHint','repH','repGeoH','repPlaceH','repFreqH','repPostsH','repByAge','repByGender','tagline'].forEach(k=>S(k,tt(k)));
+  const dt=document.getElementById('defsTop');
+  if(dt) dt.innerHTML=DEFS.map(x=>`<div class="def"><div class="de">${x.ic}</div><div><h4>${x[L].h}</h4><p>${x[L].p}</p></div></div>`).join('');
+  document.documentElement.lang=L;
+}
+
+let ROWS = SNAP.slice();       // dữ liệu hiện hành (snapshot hoặc live)
+
+/* ---------- helpers ---------- */
+const CPM = META.cpmReach, CPC = META.cpcTraffic;
+const _loc = () => L==='en' ? 'en-US' : 'vi-VN';
+const fmtInt = n => Math.round(n).toLocaleString(_loc());
+const fmtVND = n => Math.round(n).toLocaleString(_loc());
+const fmtPct = (n,d=1) => (isFinite(n)?(n*100).toFixed(d):'0.0')+'%';
+const spendOf = r => r.obj==='Reach' ? r.impr/1000*CPM : (r.obj==='Traffic'? r.click*CPC : 0);
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const uniq = a => [...new Set(a)];
+
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+const FLIGHT_TOTAL = daysBetween(META.campaignStart, META.campaignEnd)+1;
+
+/* ---------- date helpers ---------- */
+function isoAdd(iso,days){ const d=new Date(iso); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+
+/* ---------- aggregation ---------- */
+function sumMetrics(rows){
+  const t={impr:0,eng:0,view:0,click:0,spend:0};
+  rows.forEach(r=>{t.impr+=r.impr;t.eng+=r.eng;t.view+=r.view;t.click+=r.click;t.spend+=spendOf(r);});
+  return t;
+}
+function kpiSum(filter){
+  const t={budget:0,qty:0,impr:0,eng:0,view:0,click:0};
+  KPI.filter(filter).forEach(k=>{t.budget+=k.budget;t.qty+=k.qty;t.impr+=k.impr;t.eng+=k.eng;t.view+=k.view;t.click+=k.click;});
+  return t;
+}
+function groupBy(rows, keyFn){
+  const m=new Map();
+  rows.forEach(r=>{const k=keyFn(r); if(!m.has(k)) m.set(k,[]); m.get(k).push(r);});
+  return m;
+}
+
+/* ============================ RENDER ============================ */
+function updateDateBounds(){
+  if(!ROWS.length) return;
+  const mn=ROWS.reduce((m,r)=>r.date<m?r.date:m,ROWS[0].date), mx=ROWS.reduce((m,r)=>r.date>m?r.date:m,ROWS[0].date);
+  ['fromDate','toDate'].forEach(id=>{const el=document.getElementById(id); el.min=mn; el.max=mx;});
+}
+function currentRange(){
+  const maxd = ROWS.length? ROWS.reduce((m,r)=> r.date>m?r.date:m, ROWS[0].date) : (META.dataMaxDate||META.campaignEnd);
+  const f=document.getElementById('fromDate').value, t=document.getElementById('toDate').value;
+  if(f && t){ const from=f<=t?f:t, to=f<=t?t:f; return {from,to,label:`${vn(from)} – ${vn(to)}`}; }
+  const mode=document.getElementById('rangeSel').value;
+  let from=META.campaignStart;
+  if(mode==='today') from=maxd;
+  else if(mode==='l7d')  from=isoAdd(maxd,-6);
+  else if(mode==='l14d') from=isoAdd(maxd,-13);
+  else if(mode==='mtd')  from=maxd.slice(0,8)+'01';
+  return {from, to:maxd, label:labelRange(mode)};
+}
+function render(){
+  updateDateBounds();
+  const range = currentRange();
+  const rows = ROWS.filter(r=> r.date>=range.from && r.date<=range.to);
+  const act = sumMetrics(rows);
+
+  // full-campaign KPI totals
+  const kReach   = kpiSum(k=>k.obj==='Reach');
+  const kTraffic = kpiSum(k=>k.obj==='Traffic');
+  const kAll     = kpiSum(()=>true);
+
+  const trafficStarted = rows.some(r=>r.obj==='Traffic' && (r.impr>0||r.click>0));
+  renderKpiCards(act, {kReach,kTraffic,kAll,trafficStarted});
+  renderFlight(act, kAll);
+  renderDelivery({kReach,kTraffic,kAll});
+  renderTrend(rows, kAll.impr/FLIGHT_TOTAL);
+  renderFunnel(act);
+  renderDonut(rows);
+  renderPool();
+  renderOverview(rows);
+  renderAudience(rows);
+  renderDeep(rows);
+  renderReport();
+  renderPosts();
+  renderAgeGender();
+  renderCommentary(rows, act, {kReach,kTraffic,kAll});
+
+  document.getElementById('trendHint').textContent = rows.length? range.label : tt('noData');
+  document.getElementById('flightRange').textContent =
+     `${vn(META.campaignStart)} → ${vn(META.campaignEnd)}`;
+}
+function labelRange(m){return{all:tt('rAll'),l7d:tt('rL7d'),l14d:tt('rL14d'),mtd:tt('rMtd'),today:tt('rToday')}[m]||m;}
+function vn(iso){const [y,mo,d]=iso.split('-');return `${d}/${mo}/${y}`;}
+
+/* ---- flight progress % (theo ngày thực) ---- */
+function flightElapsed(){
+  const today = new Date().toISOString().slice(0,10);
+  const cur = today < META.campaignStart ? META.campaignStart : (today>META.campaignEnd?META.campaignEnd:today);
+  return clamp01((daysBetween(META.campaignStart,cur)+1)/FLIGHT_TOTAL);
+}
+
+function renderKpiCards(act, k){
+  const flight = flightElapsed();
+  const cards = [
+    {lab:tt('kSpend'), val:fmtVND(act.spend), unit:'đ', a:act.spend, kpi:k.kAll.budget, isMoney:true},
+    {lab:tt('kImpr'),  val:fmtInt(act.impr),  unit:'', a:act.impr,  kpi:k.kReach.impr},
+    {lab:tt('kEng'),   val:fmtInt(act.eng),   unit:'', numberOnly:true},
+    {lab:tt('kView'),  val:fmtInt(act.view),  unit:'', numberOnly:true},
+    {lab:tt('kClick'), val:fmtInt(act.click), unit:'', numberOnly:true},
+  ];
+  document.getElementById('kpiCards').innerHTML = cards.map(c=>{
+    if(c.numberOnly){   // chỉ hiện SỐ campaign đạt được, KHÔNG so target (tránh nhầm)
+      return `<div class="card kpi">
+        <div class="lab"><span class="ic"></span>${c.lab}</div>
+        <div class="val">${c.val}<span class="unit"> ${c.unit}</span></div>
+        <div class="vs" style="color:var(--muted2)">${tt('actualTag')}</div>
+      </div>`;
+    }
+    const p = c.kpi>0 ? clamp01(c.a/c.kpi) : 0;
+    const pl = paceLabel(c.kpi>0?c.a/c.kpi:0, flight, c.a);
+    return `<div class="card kpi">
+      <div class="lab"><span class="ic"></span>${c.lab}</div>
+      <div class="val">${c.val}<span class="unit"> ${c.unit}</span></div>
+      <div class="vs">${tt('target')}: <b>${c.kpi>0?(c.isMoney?fmtVND(c.kpi)+'đ':fmtInt(c.kpi)):'—'}</b></div>
+      <div class="bar"><i style="width:${(p*100).toFixed(1)}%"></i></div>
+      <div class="pct"><span>${tt('reached')} <b>${fmtPct(c.kpi>0?c.a/c.kpi:0)}</b></span>
+        <span style="color:${pl.col};font-weight:700">${c.kpi>0?pl.t:''}</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* nhãn nhịp — tích cực/trung tính */
+function paceLabel(ach, flight, actual){
+  if(actual<=0) return {t:tt('soon'), col:'var(--muted)'};
+  if(ach>=flight) return {t:tt('pAhead'), col:'var(--ok)'};
+  if(ach>=flight*0.5) return {t:tt('pOn'), col:'var(--ok)'};
+  return {t:tt('pSpeed'), col:'var(--zp-red)'};
+}
+
+function renderFlight(act, kAll){
+  const flight = flightElapsed();
+  const today = new Date().toISOString().slice(0,10);
+  const cur = today>META.campaignEnd?META.campaignEnd:today;
+  const elapsed = Math.max(0, Math.min(FLIGHT_TOTAL, daysBetween(META.campaignStart,cur)+1));
+  const deliv = kAll.budget>0 ? act.spend/kAll.budget : 0;
+  const onPace = deliv >= flight*0.85;
+  document.getElementById('flightStrip').innerHTML = `
+    <div class="big">${tt('flDay')} ${elapsed}/${FLIGHT_TOTAL}</div>
+    <div class="track"><div class="bar" style="height:9px"><i style="width:${(flight*100).toFixed(1)}%"></i></div></div>
+    <span class="chip">${fmtPct(flight,0)} ${tt('flTime')}</span>
+    <span class="chip">${fmtPct(deliv,1)} ${tt('flBudget')}</span>
+    <span class="chip ${onPace?'ok':''}">${onPace?tt('flOk'):tt('flOpt')}</span>`;
+}
+
+/* ---- Bảng tiến độ delivery: Kế hoạch theo nhịp (mục tiêu × %flight) vs Thực tế luỹ kế ---- */
+function renderDelivery(k){
+  const el=document.getElementById('tblDeliv'); if(!el) return;
+  const f=flightElapsed();
+  const S=(obj,fn)=>ROWS.filter(r=>r.obj===obj).reduce((s,r)=>s+fn(r),0);
+  const reachImpr=S('Reach',r=>r.impr), reachSpend=S('Reach',spendOf);
+  const trafficClick=S('Traffic',r=>r.click), trafficSpend=S('Traffic',spendOf);
+  const trafficLater = (trafficSpend+trafficClick)<=0;
+  function pace(actual, planned){
+    if(planned<=0) return `<span style="color:var(--muted)">—</span>`;
+    const ok=actual>=planned*0.95;
+    return `<span style="color:${ok?'var(--ok)':'var(--zp-red)'};font-weight:700">${ok?tt('pAhead'):tt('pSpeed')}</span>`;
+  }
+  const rows=[
+    {br:'Reach', metric:tt('kImpr'),  goal:k.kReach.impr,   plan:k.kReach.impr*f,   act:reachImpr,   money:false},
+    {br:'Reach', metric:tt('kSpend'), goal:k.kReach.budget, plan:k.kReach.budget*f, act:reachSpend,  money:true},
+    {br:'Traffic', metric:tt('kClick'), goal:k.kTraffic.click, plan:0, act:trafficClick, money:false, later:trafficLater},
+    {br:'Traffic', metric:tt('kSpend'), goal:k.kTraffic.budget, plan:0, act:trafficSpend, money:true, later:trafficLater},
+  ];
+  let html=`<thead><tr><th>${tt('dBranch')}</th><th>${tt('dMetric')}</th><th>${tt('dGoal')}</th><th>${tt('dPlan')}</th><th>${tt('dActual')}</th><th>${tt('dPace')}</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const fmt=r.money?fmtVND:fmtInt, u=r.money?'đ':'';
+    const planS=r.later?'—':fmt(r.plan)+u;
+    const paceS=r.later?`<span style="color:var(--muted);font-weight:700">${tt('soon')}</span>`:pace(r.act,r.plan);
+    html+=`<tr><td><span class="pill ${r.br.toLowerCase()}">${r.br}</span></td><td>${r.metric}</td>
+      <td>${fmt(r.goal)+u}</td><td>${planS}</td><td><b>${fmt(r.act)+u}</b></td><td>${paceS}</td></tr>`;
+  });
+  html+='</tbody>';
+  el.innerHTML=html;
+  const today=new Date().toISOString().slice(0,10);
+  const elapsed=Math.max(0,Math.min(FLIGHT_TOTAL,daysBetween(META.campaignStart, today>META.campaignEnd?META.campaignEnd:today)+1));
+  document.getElementById('delivHint').textContent = tt('dPlanNote').replace('{d}',elapsed).replace('{t}',FLIGHT_TOTAL);
+}
+
+/* ---- SVG trend chart (impression/ngày + luỹ kế) ---- */
+function renderTrend(rows, idealPerDay){
+  const svg = document.getElementById('trendChart');
+  const W=1000,H=260,PL=54,PR=54,PT=16,PB=34;
+  const byDate = new Map();
+  rows.forEach(r=>byDate.set(r.date,(byDate.get(r.date)||0)+r.impr));
+  const days=[...byDate.keys()].sort();
+  if(!days.length){svg.innerHTML='';return;}
+  const daily=days.map(d=>byDate.get(d));
+  let run=0; const cum=daily.map(v=>run+=v);
+  // nhịp chuẩn: mục tiêu impr/ngày × số ngày (lịch) từ đầu khoảng
+  const ideal=days.map(d=> (idealPerDay||0)*(daysBetween(days[0],d)+1));
+  const maxD=Math.max(...daily,1), maxC=Math.max(...cum,...ideal,1);
+  const x=i=>PL+(days.length===1?(W-PL-PR)/2:i*(W-PL-PR)/(days.length-1));
+  const yD=v=>H-PB-(v/maxD)*(H-PT-PB);
+  const yC=v=>H-PB-(v/maxC)*(H-PT-PB);
+  const bw=Math.max(6,Math.min(30,(W-PL-PR)/days.length*0.6));
+  let g='';
+  // y grid + labels (impr/day left)
+  for(let i=0;i<=4;i++){const yy=PT+i*(H-PT-PB)/4;const val=maxD*(1-i/4);
+    g+=`<line x1="${PL}" y1="${yy}" x2="${W-PR}" y2="${yy}" stroke="#eee"/>`;
+    g+=`<text x="${PL-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#A39EA0">${fmtInt(val)}</text>`;}
+  // bars daily (lime)
+  days.forEach((d,i)=>{const h=H-PB-yD(daily[i]);
+    g+=`<rect x="${x(i)-bw/2}" y="${yD(daily[i])}" width="${bw}" height="${Math.max(0,h)}" rx="2" fill="#9BB0D8" opacity="1"><title>${vn(d)}: ${fmtInt(daily[i])} impr</title></rect>`;});
+  // ideal-pace line (dashed grey) — mục tiêu theo thời gian
+  if(idealPerDay){const ip=days.map((d,i)=>`${x(i)},${yC(ideal[i])}`).join(' ');
+    g+=`<polyline points="${ip}" fill="none" stroke="#9AA3BA" stroke-width="2" stroke-dasharray="6 5"><title>Nhịp chuẩn (mục tiêu theo thời gian)</title></polyline>`;}
+  // cumulative line (blue)
+  const pts=days.map((d,i)=>`${x(i)},${yC(cum[i])}`).join(' ');
+  g+=`<polyline points="${pts}" fill="none" stroke="#4E6BAE" stroke-width="2.8"/>`;
+  days.forEach((d,i)=>{g+=`<circle cx="${x(i)}" cy="${yC(cum[i])}" r="3" fill="#4E6BAE"><title>${vn(d)}: luỹ kế ${fmtInt(cum[i])}</title></circle>`;});
+  // right axis (cumulative)
+  for(let i=0;i<=4;i++){const yy=PT+i*(H-PT-PB)/4;const val=maxC*(1-i/4);
+    g+=`<text x="${W-PR+8}" y="${yy+4}" text-anchor="start" font-size="10" fill="#A39EA0">${fmtInt(val)}</text>`;}
+  // x labels (thin)
+  const step=Math.ceil(days.length/8);
+  days.forEach((d,i)=>{if(i%step===0||i===days.length-1){const [yy,mo,dd]=d.split('-');
+    g+=`<text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#A39EA0">${dd}/${mo}</text>`;}});
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=g;
+}
+
+/* ---- I. Overview: Objective x Asset ---- */
+function achMini(a,kpi){
+  const p=kpi>0?clamp01(a/kpi):0;
+  return `<span class="mini"><span class="minibar"><i style="width:${(p*100).toFixed(0)}%"></i></span>${fmtPct(kpi>0?a/kpi:0)}</span>`;
+}
+function renderOverview(rows){
+  const objs=['Reach','Traffic'];
+  let html=`<thead><tr><th>${tt('cObjAsset')}</th><th>${tt('cBuy')}</th><th>${tt('cUnit')}</th>
+     <th>${tt('cBudget')}</th><th>${tt('cSpend')}</th><th>${tt('cImpr')}</th><th>${tt('cClick')}</th><th>${tt('cAchKpi')}</th></tr></thead><tbody>`;
+  const g=groupBy(rows, r=>r.obj+'||'+r.asset);
+  let G={spend:0,impr:0,click:0}, GK={budget:0};
+  objs.forEach(obj=>{
+    const assets = uniq(KPI.filter(k=>k.obj===obj).map(k=>k.asset)).sort();
+    // objective subtotal
+    const oAct = sumMetrics(rows.filter(r=>r.obj===obj));
+    const oK   = kpiSum(k=>k.obj===obj);
+    G.spend+=oAct.spend;G.impr+=oAct.impr;G.click+=oAct.click;GK.budget+=oK.budget;
+    html+=`<tr class="obj-row"><td><span class="pill ${obj.toLowerCase()}">${obj}</span></td>
+       <td>${obj==='Reach'?'CPM':'CPC'}</td><td>${obj==='Reach'?fmtVND(CPM)+'đ':fmtVND(CPC)+'đ'}</td>
+       <td>${fmtVND(oK.budget)}</td>
+       <td>${fmtVND(oAct.spend)}</td><td>${fmtInt(oAct.impr)}</td><td>${fmtInt(oAct.click)}</td>
+       <td>${achMini(obj==='Reach'?oAct.impr:oAct.click, obj==='Reach'?oK.impr:oK.click)}</td></tr>`;
+    assets.forEach(asset=>{
+      const rr=(g.get(obj+'||'+asset)||[]);
+      const a=sumMetrics(rr);
+      const kk=kpiSum(k=>k.obj===obj && k.asset===asset);
+      const primaryA = obj==='Reach'?a.impr:a.click, primaryK = obj==='Reach'?kk.impr:kk.click;
+      html+=`<tr><td class="sub-td">&nbsp;&nbsp;&nbsp;${asset}</td>
+        <td class="sub-td"></td><td class="sub-td"></td>
+        <td class="sub-td">${fmtVND(kk.budget)}</td>
+        <td>${fmtVND(a.spend)}</td><td>${fmtInt(a.impr)}</td><td>${fmtInt(a.click)}</td>
+        <td>${achMini(primaryA,primaryK)}</td></tr>`;
+    });
+  });
+  const GKall=kpiSum(()=>true);
+  html+=`<tr class="grand"><td>${tt('cGrand')}</td><td></td><td></td><td>${fmtVND(GKall.budget)}</td>
+     <td>${fmtVND(G.spend)}</td><td>${fmtInt(G.impr)}</td><td>${fmtInt(G.click)}</td>
+     <td>${fmtPct(GKall.budget>0?G.spend/GKall.budget:0)}</td></tr>`;
+  html+='</tbody>';
+  document.getElementById('tblOverview').innerHTML=html;
+}
+
+/* ---- II. Audience x Creative ---- */
+/* Khoá ghép audience = KHOẢNG TUỔI (vd "5-15","0-2") → actual↔KPI ghép được kể cả khi
+   đổi tiền tố tên (Mom→Parents…). Không có range thì fallback về chuỗi thường-hoá. */
+function audKey(a){ const m=String(a||'').match(/(\d+)\s*[-–]\s*(\d+)/); return m ? m[1]+'-'+m[2] : String(a||'').trim().toLowerCase(); }
+function renderAudience(rows){
+  // Tên hiển thị: ưu tiên tên trong actual/FB_Paxy (tên client-facing anh set), fallback tên KPI.
+  const dispByKey={}; rows.forEach(r=>{const k=audKey(r.aud); if(k && !dispByKey[k]) dispByKey[k]=r.aud;});
+  const auds = uniq(KPI.map(k=>k.aud)).filter(a=>a && !/0[-–]15/.test(a)).sort();
+  let html=`<thead><tr><th>${tt('cAudAsset')}</th><th>${tt('cObj')}</th>
+     <th>${tt('cSpend')}</th><th>${tt('cImpr')}</th><th>${tt('cView')}</th><th>${tt('cClick')}</th><th>${tt('cAch')}</th></tr></thead><tbody>`;
+  auds.forEach(aud=>{
+    const key=audKey(aud);
+    const disp=dispByKey[key]||aud;
+    const aAct=sumMetrics(rows.filter(r=>audKey(r.aud)===key));
+    const aK=kpiSum(k=>audKey(k.aud)===key);
+    html+=`<tr class="obj-row"><td>${disp}</td><td></td>
+      <td>${fmtVND(aAct.spend)}</td><td>${fmtInt(aAct.impr)}</td><td>${fmtInt(aAct.view)}</td><td>${fmtInt(aAct.click)}</td>
+      <td>${achMini(aAct.impr, aK.impr)}</td></tr>`;
+    // rows by obj+asset within audience that have KPI
+    const combos = KPI.filter(k=>audKey(k.aud)===key).map(k=>k.obj+'||'+k.asset);
+    uniq(combos).sort().forEach(c=>{
+      const [obj,asset]=c.split('||');
+      const rr=rows.filter(r=>audKey(r.aud)===key&&r.obj===obj&&r.asset===asset);
+      const a=sumMetrics(rr);
+      const kk=kpiSum(k=>audKey(k.aud)===key&&k.obj===obj&&k.asset===asset);
+      const pa=obj==='Reach'?a.impr:a.click, pk=obj==='Reach'?kk.impr:kk.click;
+      html+=`<tr><td class="sub-td">&nbsp;&nbsp;&nbsp;${asset}</td>
+        <td><span class="pill ${obj.toLowerCase()}">${obj}</span></td>
+        <td>${fmtVND(a.spend)}</td><td>${fmtInt(a.impr)}</td><td>${fmtInt(a.view)}</td><td>${fmtInt(a.click)}</td>
+        <td>${achMini(pa,pk)}</td></tr>`;
+    });
+  });
+  html+='</tbody>';
+  document.getElementById('tblAudience').innerHTML=html;
+}
+
+/* ---- III. Deepdive Pillar x Asset ---- */
+function renderDeep(rows){
+  let html=`<thead><tr><th>${tt('cPillarAsset')}</th><th>${tt('cImpr')}</th><th>${tt('cView15')}</th><th>${tt('cClick')}</th><th>%VR</th><th>%CTR</th></tr></thead><tbody>`;
+  const pillars = uniq(rows.map(r=>r.pillar)).sort();
+  pillars.forEach(p=>{
+    const pr=rows.filter(r=>r.pillar===p); const pa=sumMetrics(pr);
+    html+=`<tr class="obj-row"><td>${p}</td><td>${fmtInt(pa.impr)}</td><td>${fmtInt(pa.view)}</td><td>${fmtInt(pa.click)}</td>
+      <td>${fmtPct(pa.impr>0?pa.view/pa.impr:0,2)}</td><td>${fmtPct(pa.impr>0?pa.click/pa.impr:0,3)}</td></tr>`;
+    const assets=uniq(pr.map(r=>r.asset)).sort();
+    assets.forEach(as=>{
+      const a=sumMetrics(pr.filter(r=>r.asset===as));
+      html+=`<tr><td class="sub-td">&nbsp;&nbsp;&nbsp;${as}</td><td>${fmtInt(a.impr)}</td><td>${fmtInt(a.view)}</td><td>${fmtInt(a.click)}</td>
+        <td class="sub-td">${fmtPct(a.impr>0?a.view/a.impr:0,2)}</td><td class="sub-td">${fmtPct(a.impr>0?a.click/a.impr:0,3)}</td></tr>`;
+    });
+  });
+  if(!pillars.length) html+=`<tr><td colspan="6" style="text-align:center;color:var(--muted)">${tt('noData')}</td></tr>`;
+  html+='</tbody>';
+  document.getElementById('tblDeep').innerHTML=html;
+}
+
+/* ---- Phễu hành trình: Hiển thị → Tương tác → Xem → Bấm link ---- */
+function renderFunnel(act){
+  const steps=[
+    {k:tt('fImpr'), v:act.impr, c:'#4E6BAE'},
+    {k:tt('fEng'), v:act.eng, c:'#6C8CC7'},
+    {k:tt('fView'), v:act.view, c:'#9BB0D8'},
+    {k:tt('fClick'), v:act.click, c:'#CADB36'},
+  ];
+  const max=steps[0].v||1; let h='';
+  steps.forEach((s,i)=>{
+    const w=Math.max(4, s.v/max*100);
+    const prev=i>0?steps[i-1].v:0;
+    const step=i>0&&prev>0? ` · ${tt('fKept')} ${fmtPct(s.v/prev,1)} ${tt('fPrev')}`:'';
+    h+=`<div class="fn-row"><div class="fn-lab">${s.k}</div>
+      <div class="fn-barwrap"><div class="fn-bar" style="width:${w}%;background:${s.c}"></div><span class="fn-val">${fmtInt(s.v)}</span></div>
+      <div class="fn-sub">${i===0?tt('fStart'):fmtPct(s.v/max,2)+' '+tt('fOf')}${step}</div></div>`;
+  });
+  document.getElementById('funnel').innerHTML=h;
+}
+/* ---- Donut tỷ trọng tiếp cận theo nội dung ---- */
+function renderDonut(rows){
+  const m=aggMap(rows.filter(r=>r.impr>0), r=>r.asset, r=>r.impr);
+  const entries=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){document.getElementById('donutWrap').innerHTML='<div class="fn-sub">Chưa có dữ liệu</div>';return;}
+  const total=entries.reduce((s,e)=>s+e[1],0)||1;
+  const colors=['#6C8CC7','#CADB36','#4E6BAE','#B3C42B','#9BB0D8','#E2E88F'];
+  const R=52,C=2*Math.PI*R; let off=0,arcs='',leg='';
+  entries.forEach((e,i)=>{const frac=e[1]/total,col=colors[i%colors.length],len=frac*C;
+    arcs+=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${col}" stroke-width="18" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"><title>${assetVN(e[0])}: ${fmtInt(e[1])} (${fmtPct(frac,1)})</title></circle>`;
+    off+=len;
+    leg+=`<div class="lg-row"><span class="lg-sw" style="background:${col}"></span>${assetVN(e[0])} <b>${fmtPct(frac,1)}</b></div>`;});
+  document.getElementById('donutWrap').innerHTML=`<div class="donut-flex">
+    <svg viewBox="0 0 140 140" width="150" height="150" style="flex:0 0 auto">${arcs}
+      <text x="70" y="66" text-anchor="middle" font-size="11" fill="#767B6A">${tt('donutTotal')}</text>
+      <text x="70" y="85" text-anchor="middle" font-size="15" font-weight="800" fill="#242A15">${fmtShort(total)}</text>
+    </svg><div class="donut-legend">${leg}</div></div>`;
+}
+
+/* ---- Độ phủ tệp: donut Unique Reach / Pool size (config POOL_REACH, reach điền tay) ---- */
+function renderPool(){
+  const el=document.getElementById('poolWrap'); if(!el) return;
+  const R=52, C=2*Math.PI*R;
+  el.innerHTML = (POOL_REACH||[]).map(p=>{
+    const has=(+p.reach||0)>0;
+    const pMin=+p.poolMin||+p.pool||0, pMax=+p.poolMax||+p.pool||0, isRange=pMax>pMin;
+    const poolText = isRange ? `${fmtShort(pMin)} – ${fmtShort(pMax)}` : fmtInt(p.pool);
+    const pct = p.pool>0 ? clamp01((+p.reach||0)/p.pool) : 0;
+    const pctText = has ? (isRange?'~':'')+fmtPct(pct,1) : '—';
+    const len=pct*C;
+    const ring = has ? `<circle cx="70" cy="70" r="52" fill="none" stroke="#6C8CC7" stroke-width="16" stroke-dasharray="${len} ${C-len}" transform="rotate(-90 70 70)" stroke-linecap="round"/>` : '';
+    const nm = L==='en' ? p.name.replace(/^(Mẹ|Phụ huynh) có con /,'Parents with kids ').replace(/ tuổi$/,' y.o.').replace(/^Toàn Việt Nam$/i,'All Vietnam') : p.name;
+    return `<div class="card pad">
+      <div class="mini-h">${nm}</div>
+      <div class="donut-flex" style="align-items:center">
+        <svg viewBox="0 0 140 140" width="130" height="130" style="flex:0 0 auto">
+          <circle cx="70" cy="70" r="52" fill="none" stroke="#E7ECF5" stroke-width="16"/>${ring}
+          <text x="70" y="66" text-anchor="middle" font-size="21" font-weight="800" fill="#2E343A">${pctText}</text>
+          <text x="70" y="88" text-anchor="middle" font-size="11" fill="#6E7683">${tt('pctReach')}</text>
+        </svg>
+        <div style="font-size:13px;line-height:2.1">
+          <div>${tt('poolSize')}: <b>${poolText}</b> ${tt('ppl')}</div>
+          <div>${tt('uReach')}: <b>${has?fmtInt(p.reach):tt('notFilled')}</b></div>
+          <div>${tt('pctReach')}: <b style="color:var(--zp-red)">${pctText}</b></div>
+        </div>
+      </div>
+      ${has?'':'<div class="fn-sub" style="margin-top:8px">'+tt('poolHintCard')+'</div>'}
+    </div>`;
+  }).join('');
+}
+
+/* ============================ IV. META ADS BREAKDOWN ============================ */
+const REGION_MAP = {
+  'Hanoi':{vi:'Hà Nội',en:'Hanoi'},
+  'Ho Chi Minh City':{vi:'TP. Hồ Chí Minh',en:'Ho Chi Minh City'},
+  'Unknown':{vi:'Không xác định',en:'Unknown'},
+};
+function regionName(k){
+  if(REGION_MAP[k]) return REGION_MAP[k][L];
+  return String(k).replace(/\s*Provin(ce)?$/i,'').trim();   // bỏ đuôi "Province"
+}
+/* total: tổng để tính % (vd tổng reach TOÀN QUỐC khi chỉ hiện top 5) — bỏ trống thì lấy tổng items.
+   Màu đậm→nhạt theo thứ hạng (vẫn trong dải brand blue) để phân biệt các cột. */
+const HBAR_RANK=[['#3F5DA3','#7E97CE'],['#4E6BAE','#93A9D6'],['#6C8CC7','#AFC0E2'],
+                 ['#89A1D2','#C2CEE9'],['#A6B8DE','#D5DDF1']];
+function hbar(items, valFn, labFn, green, total){
+  const max=Math.max(...items.map(valFn),1);
+  const tot=total||items.reduce((s,x)=>s+valFn(x),0)||1;
+  return items.map((x,i)=>{
+    const v=valFn(x), w=Math.max(3, v/max*100);
+    const c=HBAR_RANK[Math.min(i,HBAR_RANK.length-1)];
+    const bg=green?'':`;background:linear-gradient(90deg,${c[0]},${c[1]})`;
+    return `<div class="hbar-row"><div class="hbar-lab" title="${labFn(x)}">${labFn(x)}</div>
+      <div class="hbar-track"><div class="hbar-fill${green?' g':''}" style="width:${w}%${bg}"></div></div>
+      <div class="hbar-val">${fmtShort(v)} <small>${fmtPct(v/tot,0)}</small></div></div>`;
+  }).join('');
+}
+function renderReport(){
+  const sec=document.getElementById('secReport'); if(!sec) return;
+  if(!REPORT || !REPORT.hasData){ sec.style.display='none'; return; }
+  sec.style.display='';
+  const win=REPORT.window||{};
+  const winTxt=(win.start&&win.end)?`${vn(win.start)} → ${vn(win.end)}`:'';
+  document.getElementById('repHint').textContent=tt('repHint');
+  document.getElementById('repWindow').innerHTML =
+    `<span class="tag">📅 ${winTxt}</span><span style="font-size:12.5px;color:var(--muted)">${tt('repWinLead')} <b>${winTxt}</b> ${tt('repWinTail')}</span>`;
+
+  // A) Geo — theo Reach (số người; nguồn tab 'Region' đã de-dup ở cấp campaign)
+  //    Chỉ hiện TOP 5, nhưng % tính trên tổng reach của TẤT CẢ tỉnh (không phải tổng 5 dòng).
+  const geoAll=(REPORT.region||[]).filter(x=>x.reach>0);
+  const geo=geoAll.slice(0,5);
+  const geoTot=(REPORT.totals&&REPORT.totals.reachRegion)||geoAll.reduce((s,x)=>s+x.reach,0);
+  document.getElementById('repGeo').innerHTML = hbar(geo, x=>x.reach, x=>regionName(x.name), false, geoTot);
+  const rw=REPORT.regionWindow||{};
+  const rwTxt=(rw.start&&rw.end)?` · ${vn(rw.start)} → ${vn(rw.end)}`:'';
+  document.getElementById('repGeoNote').textContent =
+    `${tt('repGeoNote')} · Top ${geo.length}/${geoAll.length} ${tt('repGeoUnit')}${rwTxt}`;
+
+  // B) Placement — theo Impression (1 người thấy nhiều nơi → dùng impr, donut)
+  renderReportDonut('repPlace', (REPORT.placement||[]).filter(x=>x.impr>0), x=>x.impr, x=>x.name);
+  document.getElementById('repPlaceNote').textContent = tt('repPlaceNote');
+
+  // C) Frequency (full-width) — line chart theo tuần nếu có tab 'Freq by week', else số tổng
+  const f=(REPORT.totals&&REPORT.totals.freq)||0;
+  const fTxt=f.toLocaleString(_loc(),{minimumFractionDigits:2,maximumFractionDigits:2});
+  const wk=(REPORT.weekly||[]).filter(w=>(+w.freq||0)>0);
+  const el=document.getElementById('repFreq');
+  if(wk.length>=2){
+    el.innerHTML=`<div class="chart-wrap"><svg class="freqchart" id="freqChart"></svg></div>
+      <div class="legend"><span><i style="background:#4E6BAE"></i> ${tt('freqLeg')}</span></div>
+      <div class="rep-note" style="margin-top:8px">${tt('freqChartCap')}: <b>${fTxt} ${tt('repFreqUnit')}</b>. ${tt('repFreqNote')}</div>`;
+    drawFreqChart(wk);
+  } else {
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+       <div style="display:flex;align-items:baseline;gap:10px;flex:0 0 auto">
+         <span class="freq-big">${fTxt}</span>
+         <span class="freq-unit">${tt('repFreqUnit')}</span></div>
+       <div class="rep-note" style="flex:1;min-width:240px;margin-top:0">${tt('repFreqNote')}</div>
+     </div>`;
+  }
+}
+function weekLabel(w){
+  const s=String(w).trim();
+  const m=s.match(/(\d{4})-(\d{2})-(\d{2})/);            // ISO hoặc range "2026-06-14 - ..."
+  if(m) return `${m[3]}/${m[2]}`;
+  const m2=s.match(/(\d{1,2})[\/\-](\d{1,2})/);
+  if(m2) return `${m2[1]}/${m2[2]}`;
+  return s.length>9 ? s.slice(0,9) : s;
+}
+function drawFreqChart(wk){
+  const svg=document.getElementById('freqChart'); if(!svg) return;
+  const W=1000,H=210,PL=44,PR=22,PT=22,PB=34;
+  const vals=wk.map(w=>+w.freq||0);
+  const maxV=Math.max(...vals,1.2)*1.15;
+  const x=i=>PL+(wk.length===1?(W-PL-PR)/2:i*(W-PL-PR)/(wk.length-1));
+  const y=v=>H-PB-(v/maxV)*(H-PT-PB);
+  const f1=v=>v.toLocaleString(_loc(),{minimumFractionDigits:1,maximumFractionDigits:1});
+  const f2=v=>v.toLocaleString(_loc(),{minimumFractionDigits:2,maximumFractionDigits:2});
+  let g='';
+  for(let i=0;i<=4;i++){const yy=PT+i*(H-PT-PB)/4;const val=maxV*(1-i/4);
+    g+=`<line x1="${PL}" y1="${yy}" x2="${W-PR}" y2="${yy}" stroke="#eee"/>`;
+    g+=`<text x="${PL-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#A39EA0">${f1(val)}</text>`;}
+  const pts=wk.map((w,i)=>`${x(i)},${y(vals[i])}`).join(' ');
+  g+=`<polyline points="${pts}" fill="none" stroke="#4E6BAE" stroke-width="2.8"/>`;
+  wk.forEach((w,i)=>{
+    g+=`<circle cx="${x(i)}" cy="${y(vals[i])}" r="3.6" fill="#4E6BAE"><title>${weekLabel(w.week)}: ${f2(vals[i])} ${tt('repFreqUnit')}</title></circle>`;
+    g+=`<text x="${x(i)}" y="${y(vals[i])-9}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#4E6BAE">${f2(vals[i])}</text>`;
+    g+=`<text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#A39EA0">${weekLabel(w.week)}</text>`;});
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=g;
+}
+/* Bảng Bài đăng — tên asset bấm được → mở post thật trên FB (KHÔNG hiện cost) */
+function cleanFbLink(u){
+  u=String(u||'').trim();
+  if(!u) return '';
+  u=u.replace(/^https?:\/\/web\.facebook\.com/i,'https://www.facebook.com');
+  const qi=u.indexOf('?');
+  if(qi<0) return u;
+  const kept=u.slice(qi+1).split('&').filter(p=>p && !p.startsWith('__'));   // bỏ tracking __cft__/__tn__
+  return kept.length ? u.slice(0,qi)+'?'+kept.join('&') : u.slice(0,qi);
+}
+function renderPosts(){
+  const posts=(typeof REPORT!=='undefined')?REPORT.posts:null;
+  const wrap=document.getElementById('repPostsWrap');
+  if(!wrap) return;
+  if(!posts || !posts.length){ wrap.style.display='none'; return; }
+  wrap.style.display='';
+  const list=posts.slice().filter(p=>(+p.impr||0)>0).sort((a,b)=>b.impr-a.impr);
+  let h=`<thead><tr><th>${tt('cPost')}</th><th>${tt('cPillar')}</th><th>${tt('cImpr')}</th><th>${tt('kEng')}</th><th>%ER</th></tr></thead><tbody>`;
+  list.forEach(p=>{
+    const parts=String(p.campaign).split('_');
+    const pillar=parts[3]||'', asset=parts[4]||p.campaign;
+    const er=p.impr>0?p.eng/p.impr:0;
+    const link=cleanFbLink(p.link);
+    const nameCell=link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${asset} ↗</a>` : asset;
+    h+=`<tr><td>${nameCell}</td><td class="sub-td">${pillarVN(pillar)}</td>
+      <td>${fmtInt(p.impr)}</td><td>${fmtInt(p.eng)}</td><td>${fmtPct(er,2)}</td></tr>`;
+  });
+  h+='</tbody>';
+  document.getElementById('tblPosts').innerHTML=h;
+  document.getElementById('repPostsNote').textContent=tt('repPostsNote');
+}
+
+/* Age + Gender: chỉ ĐỔ SỐ TRẦN từ pivot anh Hùng kéo (KHÔNG kèm nhận xét/insight) */
+function renderAgeGender(){
+  const ag = (typeof REPORT!=='undefined') ? REPORT.ageGender : null;
+  const wrap=document.getElementById('repAgeGenderWrap'), leg=document.getElementById('agLegend');
+  if(!wrap) return;
+  if(!ag || (!(ag.age||[]).length && !(ag.gender||[]).length)){
+    wrap.style.display='none'; if(leg) leg.style.display='none'; return;
+  }
+  const per=(ag.period&&ag.period.start&&ag.period.end)?` · 📅 ${vn(ag.period.start)} → ${vn(ag.period.end)}`:'';
+  wrap.style.display=''; if(leg){ leg.style.display=''; leg.textContent=tt('agLegend')+per; }
+  const head=c1=>`<thead><tr><th>${c1}</th><th>${tt('cImpr')}</th><th>%ER</th><th>%VR</th><th>CTR</th></tr></thead>`;
+  const tbl=(c1,list,grand)=>{
+    let h=head(c1)+'<tbody>';
+    (list||[]).forEach(e=>{ h+=`<tr><td>${e.label}</td><td>${fmtInt(e.impr)}</td>
+      <td>${fmtPct(e.er,2)}</td><td>${fmtPct(e.vr,3)}</td><td>${fmtPct(e.ctr,3)}</td></tr>`; });
+    if(grand) h+=`<tr class="grand"><td>${tt('agTotal')}</td><td>${fmtInt(grand.impr)}</td>
+      <td>${fmtPct(grand.er,2)}</td><td>${fmtPct(grand.vr,3)}</td><td>${fmtPct(grand.ctr,3)}</td></tr>`;
+    return h+'</tbody>';
+  };
+  document.getElementById('tblAge').innerHTML   = tbl(tt('agAge'),    ag.age,    ag.grand);
+  document.getElementById('tblGender').innerHTML= tbl(tt('agGender'), ag.gender, ag.grand);
+}
+function renderReportDonut(elId, entries, valFn, labFn){
+  const el=document.getElementById(elId); if(!el) return;
+  entries=entries.slice().sort((a,b)=>valFn(b)-valFn(a));
+  const total=entries.reduce((s,e)=>s+valFn(e),0)||1;
+  // gộp đuôi <2% vào "Khác/Other"
+  const big=[], tail=[];
+  entries.forEach(e=> (valFn(e)/total>=0.02?big:tail).push(e));
+  const tailSum=tail.reduce((s,e)=>s+valFn(e),0);
+  const items=big.map(e=>({name:labFn(e),v:valFn(e)}));
+  if(tailSum>0) items.push({name:(L==='en'?'Other':'Khác'),v:tailSum});
+  const colors=['#4E6BAE','#CADB36','#6C8CC7','#B3C42B','#9BB0D8','#E2E88F','#C7D0E6'];
+  const R=52,C=2*Math.PI*R; let off=0,arcs='',leg='';
+  items.forEach((e,i)=>{const frac=e.v/total,col=colors[i%colors.length],len=frac*C;
+    arcs+=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${col}" stroke-width="18" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"><title>${e.name}: ${fmtInt(e.v)} (${fmtPct(frac,1)})</title></circle>`;
+    off+=len;
+    leg+=`<div class="lg-row"><span class="lg-sw" style="background:${col}"></span>${e.name} <b>${fmtPct(frac,1)}</b></div>`;});
+  el.innerHTML=`<div class="donut-flex">
+    <svg viewBox="0 0 140 140" width="150" height="150" style="flex:0 0 auto">${arcs}
+      <text x="70" y="66" text-anchor="middle" font-size="11" fill="#767B6A">${tt('repImpr')}</text>
+      <text x="70" y="85" text-anchor="middle" font-size="15" font-weight="800" fill="#242A15">${fmtShort(total)}</text>
+    </svg><div class="donut-legend">${leg}</div></div>`;
+}
+
+/* ============================ NHẬN XÉT + NEXT ACTION ============================ */
+const PILLAR_VN={'KNOW THE RISK':'Nhận biết nguy cơ bệnh','PROTECT ON TIME':'Bảo vệ con đúng lúc','CLOSE THE GAP':'Tiêm nhắc đúng lịch'};
+const PILLAR_EN={'KNOW THE RISK':'Know the risk','PROTECT ON TIME':'Protect on time','CLOSE THE GAP':'Close the gap'};
+const assetVN=a=>a;   // giữ tên gốc asset (Master Video, KV, Event…) — KHÔNG dịch
+const pillarVN=p=> L==='en' ? (PILLAR_EN[p]||p) : (PILLAR_VN[p]||p);
+function fmtShort(n){n=+n||0;
+  if(L==='en'){ if(n>=1e6)return (n/1e6).toLocaleString('en-US',{maximumFractionDigits:2})+'M'; if(n>=1e3)return Math.round(n/1e3).toLocaleString('en-US')+'K'; return fmtInt(n); }
+  if(n>=1e6)return (n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:2})+' triệu'; if(n>=1e3)return Math.round(n/1e3).toLocaleString('vi-VN')+' nghìn'; return fmtInt(n);}
+function aggMap(rows,keyFn,valFn){const m={};rows.forEach(r=>{const k=keyFn(r);m[k]=(m[k]||0)+valFn(r);});return m;}
+function maxKey(m){let bk=null,bv=-Infinity;for(const k in m){if(m[k]>bv){bv=m[k];bk=k;}}return bk;}
+function bestRate(rows,keyFn,numFn,denFn,minDen){
+  const num={},den={};rows.forEach(r=>{const k=keyFn(r);num[k]=(num[k]||0)+numFn(r);den[k]=(den[k]||0)+denFn(r);});
+  let bk=null,bv=-1;for(const k in den){if(den[k]>=minDen){const rt=num[k]/den[k];if(rt>bv){bv=rt;bk=k;}}}return {key:bk,rate:bv};
+}
+function cmtBox(note){   // chỉ hiển thị Nhận xét cho khách (bỏ "Việc làm tiếp theo" theo yêu cầu)
+  return `<div class="cmt">
+    <div class="cmt-row"><span class="cmt-ic">💬</span><div><div class="h">${tt('nx')}</div><p>${note}</p></div></div>
+  </div>`;
+}
+
+function renderCommentary(rows, act, k){
+  const flight=flightElapsed();
+  const kReach=k.kReach, kAll=k.kAll;
+  const reachAch = kReach.impr>0 ? act.impr/kReach.impr : 0;   // reach impr đã đạt so với mục tiêu Reach
+  const engRate  = act.impr>0 ? act.eng/act.impr : 0;
+  const ahead = reachAch >= flight;
+
+  const topAsset = maxKey(aggMap(rows.filter(r=>r.obj==='Reach'), r=>r.asset, r=>r.impr)) || '—';
+  const topPil = maxKey(aggMap(rows, r=>r.pillar, r=>r.impr)) || '—';
+  const vrPil = bestRate(rows, r=>r.pillar, r=>r.view, r=>r.impr, 50000);
+  const heroPil = (vrPil.key||topPil);
+
+  const coreImpr = rows.filter(r=>/5[-–]15/.test(r.aud)).reduce((s,r)=>s+r.impr,0);
+  const yngImpr  = rows.filter(r=>/0[-–]2\b/.test(r.aud)).reduce((s,r)=>s+r.impr,0);
+  const coreLead = coreImpr>=yngImpr;
+  const EN = L==='en';
+
+  // ---- Tổng quan / Summary ----
+  const sumNote = EN
+    ? `Only <b>${fmtPct(flight,0)}</b> into the flight, the campaign has already built awareness and delivered the IMOJEV message to <b>${fmtShort(act.impr)} impressions</b> (<b>${fmtPct(reachAch)}</b> of the whole-campaign reach target) with <b>${fmtShort(act.eng)} engagements</b> — ${ahead?'running <b>ahead of schedule</b>':'closely on plan'}. Of every 100 people who see it, about <b>${(engRate*100).toFixed(1)}</b> stop to like / watch / click — a healthy interest level, reinforcing IMOJEV Top-of-Mind. Best-performing content so far: <b>${assetVN(topAsset)}</b>.`
+    : `Mới đi được <b>${fmtPct(flight,0)}</b> chặng đường mà chiến dịch đã xây nhận biết, đưa thông điệp IMOJEV đến <b>${fmtShort(act.impr)} lượt hiển thị</b> (đạt <b>${fmtPct(reachAch)}</b> mục tiêu tiếp cận cả chiến dịch) và thu về <b>${fmtShort(act.eng)} lượt tương tác</b> — ${ahead?'đang chạy <b>nhanh hơn tiến độ dự kiến</b>':'đang bám sát kế hoạch'}. Cứ 100 người nhìn thấy thì khoảng <b>${(engRate*100).toFixed(1)}</b> người dừng lại thích / xem / bấm — mức quan tâm tốt, đang củng cố vị thế Top-of-Mind cho IMOJEV. Nội dung hiệu quả nhất hiện nay: <b>${assetVN(topAsset)}</b>.`;
+  document.getElementById('summaryBox').innerHTML =
+    `<div class="sum-badge">${tt('sumBadge')}</div><div class="sum-note">${sumNote}</div>`;
+
+  // ---- Trend ----
+  document.getElementById('cmtTrend').innerHTML = cmtBox(EN
+    ? `Reach grows steadily day by day, cumulatively reaching <b>${fmtShort(act.impr)} impressions</b>. Days when fresh content goes live usually spike noticeably higher.`
+    : `Lượng tiếp cận tăng đều qua từng ngày, cộng dồn đã đạt <b>${fmtShort(act.impr)} lượt hiển thị</b>. Những ngày có nội dung mới lên sóng thường bật cao hơn hẳn.`);
+
+  // ---- I. Overview ----
+  document.getElementById('cmtOverview').innerHTML = cmtBox(EN
+    ? `The <b>awareness</b> objective is running strong: <b>${fmtShort(act.impr)} impressions</b>${act.click>0?` and <b>${fmtInt(act.click)} link clicks</b> even before the click-driving ads start`:''}. <b>${assetVN(topAsset)}</b> has the widest reach.`
+    : `Nhánh <b>tăng nhận biết</b> đang chạy mạnh: mang về <b>${fmtShort(act.impr)} lượt hiển thị</b>${act.click>0?` và <b>${fmtInt(act.click)} lượt bấm link</b> dù chưa tới lịch chạy quảng cáo kéo click`:''}. Nội dung <b>${assetVN(topAsset)}</b> phủ rộng nhất.`);
+
+  // ---- II. Audience (5–15 = core) ----
+  document.getElementById('cmtAudience').innerHTML = cmtBox(EN
+    ? `The campaign focus is the <b>core group — parents of children aged 5–15</b> (driving booster-dose conversion): reached <b>${fmtShort(coreImpr)} impressions</b>${coreLead?' — currently leading on reach, on the right track':''}. The younger 0–2 group (early vaccination) is covered as support with <b>${fmtShort(yngImpr)}</b>. Both are within the target audience; budget stays prioritized on the core 5–15 group.`
+    : `Trọng tâm chiến dịch là <b>nhóm core — phụ huynh có con 5–15 tuổi</b> (mục tiêu thúc đẩy mũi nhắc lại): đã tiếp cận <b>${fmtShort(coreImpr)} lượt hiển thị</b>${coreLead?' — đang dẫn đầu về tiếp cận, đúng hướng':''}. Nhóm con nhỏ 0–2 tuổi (tiêm sớm) được phủ bổ trợ <b>${fmtShort(yngImpr)} lượt</b>. Cả hai đều nằm trong tệp mục tiêu; ngân sách vẫn ưu tiên đúng nhóm core 5–15.`);
+
+  // ---- III. Deepdive ----
+  document.getElementById('cmtDeep').innerHTML = cmtBox(EN
+    ? `The message <b>"${pillarVN(heroPil)}"</b> attracts viewers best${vrPil.rate>0?` (highest video-view rate, ${fmtPct(vrPil.rate,2)})`:''}. This content angle resonates most with parents.`
+    : `Thông điệp <b>"${pillarVN(heroPil)}"</b> đang thu hút người xem tốt nhất${vrPil.rate>0?` (tỉ lệ xem video cao nhất, ${fmtPct(vrPil.rate,2)})`:''}. Đây là hướng nội dung chạm đúng mối quan tâm của phụ huynh.`);
+
+  // ---- IV. Meta Ads breakdown ----
+  const cmtRep=document.getElementById('cmtReport');
+  if(cmtRep && REPORT && REPORT.hasData){
+    const topReg=(REPORT.region||[]).slice().sort((a,b)=>b.reach-a.reach)[0];
+    const topPlc=(REPORT.placement||[]).slice().sort((a,b)=>b.impr-a.impr)[0];
+    const fr=(REPORT.totals&&REPORT.totals.freq)||0;
+    const frTxt=fr.toLocaleString(_loc(),{minimumFractionDigits:2,maximumFractionDigits:2});
+    cmtRep.innerHTML = cmtBox(EN
+      ? `Reach is concentrated in <b>${topReg?regionName(topReg.name):'—'}</b> and other key cities, shown mostly via <b>${topPlc?topPlc.name:'—'}</b>. Average frequency is still low (<b>${frTxt}×</b>), meaning the budget is buying <b>broad new reach</b> rather than repeating to the same people.`
+      : `Lượng tiếp cận tập trung ở <b>${topReg?regionName(topReg.name):'—'}</b> và các thành phố trọng điểm, hiển thị chủ yếu qua <b>${topPlc?topPlc.name:'—'}</b>. Tần suất còn thấp (<b>${frTxt} lần</b>), tức ngân sách đang mua <b>tiếp cận người mới trên diện rộng</b> chứ chưa lặp lại vào cùng một nhóm.`);
+  } else if(cmtRep){ cmtRep.innerHTML=''; }
+}
+
+/* ============================ DATA LOADING ============================ */
+function parseCSV(text){
+  const rows=[]; let i=0,f='',row=[],q=false;
+  while(i<text.length){const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;}else q=false;} else f+=c; }
+    else{ if(c==='"')q=true; else if(c===','){row.push(f);f='';} else if(c==='\n'){row.push(f);rows.push(row);row=[];f='';} else if(c==='\r'){} else f+=c; }
+    i++;}
+  if(f.length||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+function normAsset(a){a=(a||'').trim();const m={'animation video':'Animation Video','master video':'Master Video','expert video':'Expert Video','event':'Event','kv':'KV','social':'Social'};return m[a.toLowerCase()]||a;}
+function isoDate(s){s=(s||'').trim();if(!s)return null;
+  if(s.includes('-')&&s.length>=8){const p=s.slice(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(p))return p;}
+  if(s.includes('/')){const[m,d,y]=s.split('/');if(y)return `${(+y).toString().padStart(4,'0')}-${(+m).toString().padStart(2,'0')}-${(+d).toString().padStart(2,'0')}`;}
+  return null;}
+function toNum(x){if(x==null)return 0;const s=(''+x).trim().replace(/,/g,'');if(!s||s.toUpperCase()==='#N/A')return 0;const n=+s;return isFinite(n)?n:0;}
+
+function rowsFromCSV(text){
+  const g=parseCSV(text); if(!g.length)return[];
+  const head=g[0].map(h=>(h||'').trim());
+  const idx=n=>head.indexOf(n);
+  const iDate=idx('Date'),iCh=idx('Channel'),iObj=idx('Objective'),iPil=idx('Pillar'),
+        iAs=idx('Asset'),iAud=idx('Audience'),iImp=idx('Impression'),iEng=idx('Engagement'),
+        iView=idx('FB Thruplay Action'),iClk=idx('Link click');
+  const out=[];
+  for(let r=1;r<g.length;r++){const row=g[r];
+    const d=isoDate(row[iDate]); const ch=(row[iCh]||'').trim(); const obj=(row[iObj]||'').trim();
+    if(!d||ch!=='Facebook'||(obj!=='Reach'&&obj!=='Traffic'))continue;
+    out.push({date:d,obj,pillar:(row[iPil]||'').trim()||'(n/a)',asset:normAsset(row[iAs]),
+      aud:(row[iAud]||'').trim()||'(n/a)',impr:toNum(row[iImp]),eng:toNum(row[iEng]),
+      view:toNum(row[iView]),click:toNum(row[iClk])});
+  }
+  return out;
+}
+
+function setLive(isLive, note){
+  document.getElementById('liveDot').className='dot'+(isLive?'':' snap');
+  document.getElementById('liveText').textContent=isLive?'LIVE':'Snapshot';
+  document.getElementById('footNote').innerHTML = note;
+}
+async function loadLive(){
+  const banner=document.getElementById('banner');
+  if(!DATA_URL){
+    ROWS=SNAP.slice();
+    setLive(false, `${tt('updatedAt')} ${GENERATED}`);
+    banner.style.display='none';
+    render(); return;
+  }
+  try{
+    const res=await fetch(DATA_URL+(DATA_URL.includes('?')?'&':'?')+'_t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const txt=await res.text();
+    const rows=rowsFromCSV(txt);
+    if(!rows.length) throw new Error('CSV rỗng/không đọc được cột');
+    ROWS=rows; banner.style.display='none';
+    setLive(true, `${tt('liveSrc')} ${new Date().toLocaleString(_loc())}`);
+    render();
+  }catch(e){
+    ROWS=SNAP.slice();
+    setLive(false, `Snapshot dự phòng · ${GENERATED}`);
+    banner.style.display='block';
+    banner.textContent='⚠ Không fetch được dữ liệu LIVE ('+e.message+'). Đang dùng snapshot. Kiểm tra lại link publish của tab FB_Paxy.';
+    render();
+  }
+}
+
+document.getElementById('rangeSel').addEventListener('change', ()=>{
+  document.getElementById('fromDate').value=''; document.getElementById('toDate').value=''; render();
+});
+document.getElementById('fromDate').addEventListener('change', render);
+document.getElementById('toDate').addEventListener('change', render);
+document.getElementById('refreshBtn').addEventListener('click', loadLive);
+document.getElementById('langBtn').addEventListener('click', ()=>{
+  L = (L==='en' ? 'vi' : 'en');
+  try{ localStorage.setItem('zpLang', L); }catch(e){}
+  applyStatic(); loadLive();
+});
+applyStatic();
+loadLive();
+if(AUTO_REFRESH_MIN>0 && DATA_URL) setInterval(loadLive, AUTO_REFRESH_MIN*60000);
+</script>
+</body>
+</html>
